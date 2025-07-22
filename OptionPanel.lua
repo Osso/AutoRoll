@@ -137,6 +137,7 @@ end
 
 local function checkInput(state)
 	local obj, objIsNumber, itemName, itemLink, itemTexture, itemId = panel.InputNewItem:GetText()
+	local _ -- declare underscore as local variable
 
 	if obj then
 		objIsNumber = (tonumber(obj) and true or false)
@@ -266,7 +267,9 @@ panel:SetScript("OnShow", function()
 	--- Subtitle
 	panel.subtitle = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall");
 	setPoints(panel.subtitle,{"TOPLEFT", panel.title, "BOTTOMLEFT", 0, -4});
-	panel.subtitle:SetText(("Version: %s / Author: %s"):format(GetAddOnMetadata(addon, "Version"),GetAddOnMetadata(addon,"Author")))
+	local version = GetAddOnMetadata(addon, "Version")
+	local author = GetAddOnMetadata(addon, "Author")
+	panel.subtitle:SetText(("Version: %s / Author: %s"):format(version, author))
 
 	--- Credit
 	panel.credit = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall");
@@ -281,7 +284,8 @@ panel:SetScript("OnShow", function()
 	_G[enableFrame .. "Text"]:SetText("Enable AutoRoll")
 	panel[enableName]:SetScript("OnClick", function() setValue("enabled", not getValue("enabled")) end)
 	setControl(panel[enableName], function() panel[enableName]:SetChecked(getValue("enabled")) end)
-	setTooltip(panel[enableName], "Enable AutoRoll", "Enable/Disable automatic rolling on all items. Uses item list settings when available, otherwise rolls greed.")
+	setTooltip(panel[enableName], "Enable AutoRoll",
+		"Enable/Disable automatic rolling on all items. Uses item list settings when available, otherwise rolls greed.")
 
 
 
@@ -293,7 +297,8 @@ panel:SetScript("OnShow", function()
 	_G[infoFrame .. "Text"]:SetText("Print info messages")
 	panel[infoName]:SetScript("OnClick", function() setValue("infoMessage", not getValue("infoMessage")) end)
 	setControl(panel[infoName], function() panel[infoName]:SetChecked(getValue("infoMessage")) end)
-	setTooltip(panel[infoName], "Info message", "Print info message on any executed loot roll in chat window.", {"Default: enabled", 0.6, 0.6, 0.6})
+	setTooltip(panel[infoName], "Info message",
+		"Print info message on any executed loot roll in chat window.", {"Default: enabled", 0.6, 0.6, 0.6})
 
 	--- Inset border frame for itemList (scrollFrame)
 	local listName, listFrame, borderName = "itemList", panel:GetName() .. "itemList", "itemListBorder"
@@ -309,12 +314,14 @@ panel:SetScript("OnShow", function()
 	--- itemList ScrollFrame
 	panel[listName] = CreateFrame("ScrollFrame", listFrame, panel[borderName], "BasicHybridScrollFrameTemplate")
 	setPoints(panel[listName], {"TOPLEFT", 8, -7}, {"BOTTOMRIGHT", -28, 7})
-	setPoints(panel[listName].scrollBar, {"TOPLEFT", panel[listName], "TOPRIGHT", 0, -14}, {"BOTTOMLEFT", panel[listName], "BOTTOMRIGHT", 0, 13})
+	setPoints(panel[listName].scrollBar,
+		{"TOPLEFT", panel[listName], "TOPRIGHT", 0, -14},
+		{"BOTTOMLEFT", panel[listName], "BOTTOMRIGHT", 0, 13})
 	panel[listName].scrollBar.doNotHide = true
 	panel[listName].update = updateItemList
 	HybridScrollFrame_CreateButtons(panel[listName], "AutoRoll_ItemButtonTemplate", 0, 0, nil, nil, 0, -3)
 	setControl(panel[listName], function() updateItemList(panel[listName]) end)
-	
+
 	--- add new items
 	local inputName = "InputNewItem"
 	panel[inputName] = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
