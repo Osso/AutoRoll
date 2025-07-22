@@ -32,7 +32,7 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 	if cmd == "" then
 		ns.print("Chat command list for /ar & /autoroll")
 		ns.print(nil, "toggle - enable/disable AutoRoll on all items", status(AutoRollDB.enabled))
-		ns.print(nil, "debugmode - enable/disable debug messages in chat window", status(AutoRollDB.debugMode))
+		ns.print(nil, "debug - enable/disable debug messages in chat window", status(AutoRollDB.debugMode))
 		ns.print(nil, "list - list items")
 		ns.print(nil, "add <itemId> - add an item to the item list")
 		ns.print(nil, "del <itemId> - delete an item from the item list")
@@ -43,7 +43,7 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 		toggle("AutoRoll on all items", "enabled")
 		ns.AddOnEnabled()
 
-	elseif cmd == "debugmode" then
+	elseif cmd == "debug" then
 		toggle("DebugMode", "debugMode")
 
 	elseif cmd == "list" then
