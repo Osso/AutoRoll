@@ -80,7 +80,8 @@ function main:ADDON_LOADED(name)
 end
 
 function main:START_LOOT_ROLL(rollID)
-	local _, name, _, _, _, canNeed, canGreed, canDisenchant, reasonNeed, reasonGreed, reasonDisenchant = GetLootRollItemInfo(rollID)
+	local _, name, _, _, _, canNeed, canGreed, canDisenchant, reasonNeed, reasonGreed, reasonDisenchant =
+		GetLootRollItemInfo(rollID)
 
 	if not rollID or not name then
 		ns.debugPrint(
@@ -127,7 +128,6 @@ function main:START_LOOT_ROLL(rollID)
 end
 
 function main:CONFIRM_LOOT_ROLL(rollID, arg2)
-	local _, name, _, _, _, _, _, _, reasonNeed, reasonGreed, reasonDisenchant = GetLootRollItemInfo(rollID)
 	if autoConfirm[rollID] then
 		ns.debugPrint(
 			"Event: CONFIRM_LOOT_ROLL",
@@ -140,9 +140,8 @@ function main:CONFIRM_LOOT_ROLL(rollID, arg2)
 end
 
 function main:LOOT_HISTORY_ROLL_CHANGED(index, player) -- maybe for winner popup frames replacement?
-	--local rollID, link, numPlayers, isDone, winner, isMasterLoot = C_LootHistory.GetItem(index);
-	--local name, class, rollType, roll, isWinner = C_LootHistory.GetPlayerInfo(item, player);
-	
+	--local rollID, link, numPlayers, isDone, winner, isMasterLoot = C_LootHistory.GetItem(index)
+	--local name, class, rollType, roll, isWinner = C_LootHistory.GetPlayerInfo(item, player)
 	--[[
 	ns.debugPrint(
 		"Event: LOOT_HISTORY_ROLL_CHANGED",
