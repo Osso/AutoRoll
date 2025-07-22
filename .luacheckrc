@@ -24,7 +24,7 @@ globals = {
     "GetAddOnMetadata", "CopyTable", "wipe", "strsplit", "ReloadUI",
     
     -- Lua standard but need to be explicit
-    "print", "tinsert", "floor", "strlen", "unpack", "table", "ipairs", "pairs",
+    "print", "tinsert", "floor", "strlen", "table", "ipairs", "pairs",
     "type", "tostring", "tonumber", "rawset", "setmetatable", "select"
 }
 

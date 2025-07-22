@@ -35,7 +35,7 @@ local function setTooltip(frame,...)
 		GameTooltip:AddLine(self.tooltip[1]);
 		for i=2, #self.tooltip do
 			if(type(self.tooltip[i])=="table")then
-				GameTooltip:AddLine(unpack(self.tooltip[i]));
+				GameTooltip:AddLine(table.unpack(self.tooltip[i]))
 			else
 				GameTooltip:AddLine(self.tooltip[i],1,1,1,1);
 			end
@@ -53,7 +53,7 @@ local function setPoints(frame,...)
 		frame:SetAllPoints();
 	elseif(#{...}>0)then
 		for _,point in ipairs({...})do
-			frame:SetPoint(unpack(point));
+			frame:SetPoint(table.unpack(point))
 		end
 	else
 		frame:SetPoint("TOPLEFT");

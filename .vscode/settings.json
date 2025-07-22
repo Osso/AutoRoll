@@ -1,0 +1,14 @@
+{
+    "Lua.diagnostics.globals": [
+        "GREED", "NEED", "ROLL_DISENCHANT", "PASS",
+        "GetItemInfo", "CreateFrame", "wipe", "ipairs", "pairs",
+        "print", "GetTime", "C_Timer", "StaticPopup_Show",
+        "RollOnLoot", "ConfirmLootRoll", "GetLootRollItemInfo",
+        "GetLootRollTimeLeft", "GetNumLootToRoll", "LOOT_ROLL_TYPE_NEED",
+        "LOOT_ROLL_TYPE_GREED", "LOOT_ROLL_TYPE_DISENCHANT", "LOOT_ROLL_TYPE_PASS",
+        "strsplit", "SlashCmdList"
+    ],
+    "Lua.workspace.library": [
+        "${workspaceFolder}"
+    ]
+}
