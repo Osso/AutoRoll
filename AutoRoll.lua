@@ -29,7 +29,7 @@ ns.AutoRollDB_defaults = {
 	}
 }
 AutoRollDB = ns.AutoRollDB_defaults
-ns.GET_ITEM_INFO_RECEIVED = nil
+ns.pendingItemInfo = nil
 
 function ns.print(arg1, ...)
 	if arg1 == nil then
@@ -121,18 +121,17 @@ function main:START_LOOT_ROLL(rollID)
 end
 
 
-
 function main:GET_ITEM_INFO_RECEIVED(itemId)
-	local d
-	if ns.GET_ITEM_INFO_RECEIVED then
-		d, ns.GET_ITEM_INFO_RECEIVED = ns.GET_ITEM_INFO_RECEIVED, nil
-		if d[1] == "sc" and itemId == d[3] then
+	if ns.pendingItemInfo then
+		local source, originalCommand, expectedItemId = unpack(ns.pendingItemInfo)
+		ns.pendingItemInfo = nil
+		if source == "sc" and itemId == expectedItemId then
 			ns.debugPrint(
 				"Event: GET_ITEM_INFO_RECEIVED",
 				"itemID: " .. itemId,
 				"GetItemInfo" .. table.concat({GetItemInfo(itemId)}, ", ")
 			)
-			SlashCmdList["AUTOROLL"](d[2], true)
+			SlashCmdList["AUTOROLL"](originalCommand, true)
 		end
 	end
 end

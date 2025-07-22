@@ -19,10 +19,10 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 	if itemId then
 		itemName = GetItemInfo(itemId)
 		if not itemName and internal ~= true then
-			ns.GET_ITEM_INFO_RECEIVED = {"sc", cmd_str, itemId}
+			ns.pendingItemInfo = {"sc", cmd_str, itemId}
 			C_Timer.After(3, function()
-				if ns.GET_ITEM_INFO_RECEIVED then
-					ns.GET_ITEM_INFO_RECEIVED = nil
+				if ns.pendingItemInfo and ns.pendingItemInfo[3] == itemId then
+					ns.pendingItemInfo = nil
 					ns.print(("Sorry, could not get information for item id %d. Please check the item id."):format(itemId))
 				end
 			end)
@@ -67,7 +67,7 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 		end
 
 	elseif cmd == "add" then
-		if ns.GET_ITEM_INFO_RECEIVED then
+		if ns.pendingItemInfo then
 			ns.print("Sorry, that is too fast. This addon request the item name and waiting on answer " ..
 				"from blizzards item database.")
 		elseif itemId ~= nil and itemId > 0 and not AutoRollDB.items[itemId] then
