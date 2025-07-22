@@ -1,6 +1,5 @@
 
 local addon, ns, panel = ...
-local L = ns.L
 
 ---------------------------------------------------------------
 ---------------------------------------------------------------
@@ -151,12 +150,12 @@ local function checkInput(state)
 	end
 
 	if (itemId and (panel.changes.items[itemId]~=nil or AutoRollDB.items[itemId]~=nil)) then
-		itemName, itemId = L["Item already in list."], nil;
+		itemName, itemId = "Item already in list.", nil
 	elseif (not itemId)then
 		if(objIsNumber and state=="OnUpdate")then
 			itemName, itemId = "...", nil;
 		elseif(objIsNumber and state=="OnEvent") or (not objIsNumber and state=="OnUpdate")then
-			itemName, itemId = L["Couldn't find a valid item."], nil;
+			itemName, itemId = "Couldn't find a valid item.", nil
 		end
 	end
 
@@ -265,52 +264,52 @@ panel:SetScript("OnShow", function()
 	--- Subtitle
 	panel.subtitle = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall");
 	setPoints(panel.subtitle,{"TOPLEFT", panel.title, "BOTTOMLEFT", 0, -4});
-	panel.subtitle:SetText(L["Version: %s / Author: %s"]:format(GetAddOnMetadata(addon, "Version"),GetAddOnMetadata(addon,"Author")));
+	panel.subtitle:SetText(("Version: %s / Author: %s"):format(GetAddOnMetadata(addon, "Version"),GetAddOnMetadata(addon,"Author")))
 
 	--- Credit
 	panel.credit = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall");
 	setPoints(panel.credit,{"BOTTOMLEFT", panel, "BOTTOMLEFT", 12, 12});
-	panel.credit:SetText(L["Credit: Azial for initial idea and first piece of code in german WoW forum."]);
+	panel.credit:SetText("Credit: Azial for initial idea and first piece of code in german WoW forum.")
 
 	--- Checkbutton "Enable <addon>"
 	local n,N="EnableAR";
 	N=panel:GetName()..n;
 	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
 	setPoints(panel[n],{"TOPLEFT",panel,"TOPRIGHT",-220,-6});
-	_G[N.."Text"]:SetText(L["Enable AutoRoll"]);
+	_G[N.."Text"]:SetText("Enable AutoRoll")
 	panel[n]:SetScript("OnClick",function() setValue("enabled",not getValue("enabled")); end);
 	setControl(panel[n],function() panel[n]:SetChecked(getValue("enabled")); end);
-	setTooltip(panel[n],L["Enable AutoRoll"],L["Enable/Disable automatic rolling on listed items."]);
+	setTooltip(panel[n],"Enable AutoRoll","Enable/Disable automatic rolling on listed items.")
 
 	--- Checkbutton "AutoConfirm all"
 	local n,N="AutoConfirmAll";
 	N=panel:GetName()..n;
 	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
 	setPoints(panel[n],{"TOPLEFT", panel.EnableAR, "BOTTOMLEFT", 0, 2});
-	_G[N.."Text"]:SetText(L["Automaticly confirm all"]);
+	_G[N.."Text"]:SetText("Automatically confirm all")
 	panel[n]:SetScript("OnClick",function() setValue("autoConfirmAll",not getValue("autoConfirmAll")); end);
 	setControl(panel[n],function() panel[n]:SetChecked(getValue("autoConfirmAll")); end);
-	setTooltip(panel[n],L["Automaticly confirm all"],L["Automaticly confirm all group roll requests"],{L["Not recommented"],1,.5,0},{L["Default:"].." "..L["disabled"],.6,.6,.6});
+	setTooltip(panel[n],"Automatically confirm all","Automatically confirm all group roll requests",{"Not recommended",1,.5,0},{"Default: disabled",.6,.6,.6})
 
 	--- Checkbutton "AutoRoll all"
 	local n,N="AutoRollAll";
 	N=panel:GetName()..n;
 	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
 	setPoints(panel[n],{"TOPLEFT", panel.AutoConfirmAll, "BOTTOMLEFT", 0, 2});
-	_G[N.."Text"]:SetText(L["Automaticly roll on all"]);
+	_G[N.."Text"]:SetText("Automatically roll on all")
 	panel[n]:SetScript("OnClick",function() setValue("autoRollAll",not getValue("autoRollAll")); end);
 	setControl(panel[n],function() panel[n]:SetChecked(getValue("autoRollAll")); end);
-	setTooltip(panel[n],L["Automaticly roll on all"],L["Automaticly roll on all group roll items"], {L["This function use the item list below. For all over items will be roll on greed."],0,.8,.95,1},{L["Default:"].." "..L["disabled"],.6,.6,.6});
+	setTooltip(panel[n],"Automatically roll on all","Automatically roll on all group roll items", {"This function uses the item list below. For all other items will roll greed.",0,.8,.95,1},{"Default: disabled",.6,.6,.6})
 
 	--- Checkbutton "Info message"
 	local n,N="InfoMessage";
 	N=panel:GetName()..n;
 	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
 	setPoints(panel[n],{"TOPLEFT", panel.AutoRollAll, "BOTTOMLEFT", 0, 2});
-	_G[N.."Text"]:SetText(L["Print info messages"]);
+	_G[N.."Text"]:SetText("Print info messages")
 	panel[n]:SetScript("OnClick",function() setValue("infoMessage",not getValue("infoMessage")); end);
 	setControl(panel[n],function() panel[n]:SetChecked(getValue("infoMessage")); end);
-	setTooltip(panel[n],L["Info message"],L["Print info message on any executed loot roll in chat window."], {L["Default:"].." "..L["enabled"],.6,.6,.6});
+	setTooltip(panel[n],"Info message","Print info message on any executed loot roll in chat window.", {"Default: enabled",.6,.6,.6})
 
 	--- Inset border frame for itemList (scrollFrame)
 	local n, N, b="itemList"; N, b=panel:GetName()..n, n.."Border";
@@ -333,7 +332,7 @@ panel:SetScript("OnShow", function()
 	panel[n]:SetSize(240, 26); panel[n]:SetAutoFocus(false);
 	panel[n].Label = panel[n]:CreateFontString(nil, "ARTWORK", "GameFontNormal");
 	panel[n].Label:SetPoint("BOTTOMLEFT", panel[n], "TOPLEFT");
-	panel[n].Label:SetText(L["Add new item:"]);
+	panel[n].Label:SetText("Add new item:")
 	panel[n]:SetScript("OnTextChanged",function(self)
 		if strlen(self:GetText())>0 then
 			panel.checkInput=true;
@@ -348,11 +347,11 @@ panel:SetScript("OnShow", function()
 	--- hook ChatFrame_OnHyperlinkShow(frame, link, text, button)
 
 	setTooltip(panel[n],
-		L["Add new Item"],
-		L["Adding an item by its item id."],
-		{L["Add an item by name is only possible for items in your bag."],1,1,0,1},
-		{L["Press enter or push the Add-Button to add the item to the item list"],0,.8,.95,1}
-	);
+		"Add new Item",
+		"Adding an item by its item id.",
+		{"Add an item by name is only possible for items in your bag.",1,1,0,1},
+		{"Press enter or push the Add-Button to add the item to the item list",0,.8,.95,1}
+	)
 	setPoints(panel[n],{"TOPLEFT", panel.itemList, "BOTTOMLEFT", 20, -22});
 	setControl(panel[n],function() panel[n]:SetText(""); end);
 

@@ -11,7 +11,6 @@
 ## X-Curse-Project-ID: autoroll
 ## X-Curse-Repository-ID: wow/autoroll/mainline
 
-Localizations.lua
 OptionPanel.xml
 OptionPanel.lua
 SlashCommand.lua

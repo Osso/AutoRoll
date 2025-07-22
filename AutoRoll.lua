@@ -1,9 +1,8 @@
 
 local addon, ns = ...
-local L = ns.L
 local autoConfirm = {}
 local version = 1
-ns.ModeLabels = {GREED, NEED, ROLL_DISENCHANT, PASS, L["Do nothing"]}
+ns.ModeLabels = {GREED, NEED, ROLL_DISENCHANT, PASS, "Do nothing"}
 ns.AutoRollDB_defaults = {
 	enabled = true,
 	autoConfirmAll = false,
@@ -60,13 +59,13 @@ function ns.AddOnEnabled()
 		main:UnregisterEvent("CONFIRM_LOOT_ROLL")
 		main:UnregisterEvent("LOOT_HISTORY_ROLL_CHANGED")
 	end
-	ns.print("|cffffff00" .. L["Addon"], (AutoRollDB.enabled and L["enabled"] or L["disabled"]) .. "...|r")
+	ns.print("|cffffff00Addon", (AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
 end
 
 function main:ADDON_LOADED(name)
 	if addon ~= name then return end
 
-	ns.print("|Cffffff00" .. L["Addon loaded..."] .. "|r")
+	ns.print("|Cffffff00Addon loaded...|r")
 	if AutoRollDB.version == nil then AutoRollDB.version = 0 end
 	if AutoRollDB.version <= 0.91 then
 		for i, v in pairs(ns.AutoRollDB_defaults.items) do
