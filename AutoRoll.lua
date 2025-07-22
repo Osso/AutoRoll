@@ -47,11 +47,9 @@ local main = CreateFrame("Frame", "AutoRollFrame")
 function ns.AddOnEnabled()
 	if AutoRollDB.enabled then
 		main:RegisterEvent("START_LOOT_ROLL")
-		main:RegisterEvent("LOOT_HISTORY_ROLL_CHANGED")
 		updateItemNames()
 	else
 		main:UnregisterEvent("START_LOOT_ROLL")
-		main:UnregisterEvent("LOOT_HISTORY_ROLL_CHANGED")
 	end
 	ns.print("|cffffff00Addon", (AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
 end
@@ -115,17 +113,6 @@ function main:START_LOOT_ROLL(rollID)
 end
 
 
-function main:LOOT_HISTORY_ROLL_CHANGED(index, player) -- maybe for winner popup frames replacement?
-	--local rollID, link, numPlayers, isDone, winner, isMasterLoot = C_LootHistory.GetItem(index)
-	--local name, class, rollType, roll, isWinner = C_LootHistory.GetPlayerInfo(item, player)
-	--[[
-	ns.debugPrint(
-		"Event: LOOT_HISTORY_ROLL_CHANGED",
-		"item index: " .. index or "unknown",
-		"player index: ".. player or "unknown"
-	);
-	]]
-end
 
 function main:GET_ITEM_INFO_RECEIVED(itemId)
 	local d
