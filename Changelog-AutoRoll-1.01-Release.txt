@@ -1,0 +1,44 @@
+tag 1.01-Release
+279d5e60db614c9433b02f436681686ef54f093c
+Hizuro <hizuro@gmx.net>
+2015-09-13 01:07:30 +0200
+
+Tagging as 1.01-Release
+
+
+--------------------
+
+Hizuro:
+	- update Localization.lua (cn/tw by ananhaid @ curse)
+	- adding event function for GetItemInfo and fix an error reported by TheBlackguard on curse (comment area)
+	- update Localization file
+	- fix a problem with 'add item by id' in OptionPanel.lua
+	- fix some errors in SlashCommand.lua
+	- fix roll handling.
+	- update Localizations for zhCN and zhTW.
+	- removed wrong placed |n in SlashCommand.lua
+	- fix some errors in AutoRoll.lua
+	- update menu entry to display item icons. added missing function execution for 'Enable Addon' menu entry
+	- fix error in slashcommand.lua
+	- fix little error in Localizations.lua
+	- added checkbutton in option panel for infoMessage
+	- added option infomessage and debugmode to slashcommand
+	- added menu entry to toggle new option infoMessage
+	- added infoMessage and debugMode to savedVariables. fixed addon enable/disable problem. changed core function to make it compatible to all other addons.
+	- update localizations
+	- removed example_localization.lua
+	- removed deprecated files
+	- update example_localiation.lua
+	- added LibDataBroker support
+	- added autoRollAll option. removed command line functions. changed event handling for loot roll.
+	- added externals to .pkgmeta
+	- added autoRollAll option
+	- added SlashCommand.lua to AutoRoll.toc
+	- update localizations
+	- moved command line functions to SlashCommand.lua
+	- Fix a little error in option panel. Adding credit line to option panel. Remove debug print.
+	- Some little changes...
+	- Adding option panel. Fixed greed as default. Adding more roll options (pass, disenchant, do nothing). Adding true steel lockbox to default item list.
+	- adding chat command option to enable/disable autoConfirmAll
+	- adding option toggle autoConfirmAll
+	- Initial commit
