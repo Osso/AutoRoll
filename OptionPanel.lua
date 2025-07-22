@@ -287,8 +287,16 @@ panel:SetScript("OnShow", function()
 	setTooltip(panel[enableName], "Enable AutoRoll",
 		"Enable/Disable automatic rolling on all items. Uses item list settings when available, otherwise rolls greed.")
 
-
-
+	--- Checkbutton "Debug Mode"
+	local debugName = "DebugMode"
+	local debugFrame = panel:GetName() .. debugName
+	panel[debugName] = CreateFrame("CheckButton", debugFrame, panel, "OptionsCheckButtonTemplate")
+	setPoints(panel[debugName], {"TOPLEFT", panel[enableName], "BOTTOMLEFT", 0, 2})
+	_G[debugFrame .. "Text"]:SetText("Enable debug messages")
+	panel[debugName]:SetScript("OnClick", function() setValue("debugMode", not getValue("debugMode")) end)
+	setControl(panel[debugName], function() panel[debugName]:SetChecked(getValue("debugMode")) end)
+	setTooltip(panel[debugName], "Debug Mode",
+		"Enable/Disable debug messages in chat window.", {"Default: disabled", 0.6, 0.6, 0.6})
 
 	--- Inset border frame for itemList (scrollFrame)
 	local listName = "itemList"
