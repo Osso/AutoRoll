@@ -1,30 +1,30 @@
 
-local addon, ns, panel = ...;
-local L=ns.L;
+local addon, ns, panel = ...
+local L = ns.L
 
 ---------------------------------------------------------------
 ---------------------------------------------------------------
 
-local function getValue(a,b)
-	if(b)then
-		return (panel.changes[a][b]~=nil) and panel.changes[a][b] or AutoRollDB[a][b];
+local function getValue(a, b)
+	if b then
+		return (panel.changes[a][b] ~= nil) and panel.changes[a][b] or AutoRollDB[a][b]
 	end
-	return (panel.changes[a]~=nil) and panel.changes[a] or AutoRollDB[a];
+	return (panel.changes[a] ~= nil) and panel.changes[a] or AutoRollDB[a]
 end
 
-local function setValue(a,b,c)
-	if(c)then
-		if(panel.changes[a]==nil)then panel.changes[a] = {}; end
-		panel.changes[a][b] = c;
+local function setValue(a, b, c)
+	if c then
+		if panel.changes[a] == nil then panel.changes[a] = {} end
+		panel.changes[a][b] = c
 	else
-		panel.changes[a] = b;
+		panel.changes[a] = b
 	end
 end
 
-local function setControl(frame,fnc)
+local function setControl(frame, fnc)
 	if not (frame.GetObjectType) then return end
-	frame.ctrl = fnc;
-	table.insert(panel.controls,frame);
+	frame.ctrl = fnc
+	table.insert(panel.controls, frame)
 end
 
 local function setTooltip(frame,...)
