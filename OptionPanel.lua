@@ -277,8 +277,8 @@ panel:SetScript("OnShow", function()
 	panel.credit:SetText("Credit: Azial for initial idea and first piece of code in german WoW forum.")
 
 	--- Checkbutton "Enable <addon>"
-	local enableName, enableFrame = "EnableAR"
-	enableFrame = panel:GetName() .. enableName
+	local enableName = "EnableAR"
+	local enableFrame = panel:GetName() .. enableName
 	panel[enableName] = CreateFrame("CheckButton", enableFrame, panel, "OptionsCheckButtonTemplate")
 	setPoints(panel[enableName], {"TOPLEFT", panel, "TOPRIGHT", -220, -6})
 	_G[enableFrame .. "Text"]:SetText("Enable AutoRoll")
@@ -290,8 +290,8 @@ panel:SetScript("OnShow", function()
 
 
 	--- Checkbutton "Info message"
-	local infoName, infoFrame = "InfoMessage"
-	infoFrame = panel:GetName() .. infoName
+	local infoName = "InfoMessage"
+	local infoFrame = panel:GetName() .. infoName
 	panel[infoName] = CreateFrame("CheckButton", infoFrame, panel, "OptionsCheckButtonTemplate")
 	setPoints(panel[infoName], {"TOPLEFT", panel.EnableAR, "BOTTOMLEFT", 0, 2})
 	_G[infoFrame .. "Text"]:SetText("Print info messages")
@@ -301,7 +301,9 @@ panel:SetScript("OnShow", function()
 		"Print info message on any executed loot roll in chat window.", {"Default: enabled", 0.6, 0.6, 0.6})
 
 	--- Inset border frame for itemList (scrollFrame)
-	local listName, listFrame, borderName = "itemList", panel:GetName() .. "itemList", "itemListBorder"
+	local listName = "itemList"
+	local listFrame = panel:GetName() .. "itemList"
+	local borderName = "itemListBorder"
 	panel[borderName] = CreateFrame("Frame", nil, panel)
 	setPoints(panel[borderName], {"TOPLEFT", panel.title, "BOTTOMLEFT", 0, -66}, {"BOTTOMRIGHT", -14, 105})
 	panel[borderName]:SetBackdrop({
@@ -358,7 +360,8 @@ panel:SetScript("OnShow", function()
 	panel.ItemHelper:SetText("|TInterface\\ICONS\\inv_misc_questionmark:24:24:0:0|t");
 
 	--- "add new item"-Button
-	local n,N = "AddNewItem"; N=panel:GetName()..n;
+	local n = "AddNewItem"
+	local N = panel:GetName() .. n
 	panel[n] = CreateFrame("Button", N, panel, "UIPanelButtonTemplate");
 	panel[n].Text = _G[N.."Text"];
 	panel[n].Text:SetText(ADD);
