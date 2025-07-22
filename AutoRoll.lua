@@ -5,7 +5,6 @@ local version = 1
 ns.ModeLabels = {GREED, NEED, ROLL_DISENCHANT, PASS, "Do nothing"}
 ns.AutoRollDB_defaults = {
 	enabled = true,
-	infoMessage = true,
 	debugMode = false,
 	version = 1,
 	items = {
@@ -117,7 +116,7 @@ function main:START_LOOT_ROLL(rollID)
 		"Action: " .. (ns.ModeLabels[rolling] or "nothing")
 	)
 
-	if AutoRollDB.infoMessage and rolling ~= 5 then
+	if rolling ~= 5 then
 		ns.print(name, "=", ns.ModeLabels[rolling])
 	end
 end

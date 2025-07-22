@@ -32,8 +32,6 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 	if cmd == "" then
 		ns.print("Chat command list for /ar & /autoroll")
 		ns.print(nil, "toggle - enable/disable AutoRoll on all items", status(AutoRollDB.enabled))
-		ns.print(nil, "infomessage - enable/disable info message for any executed loot roll in chat window",
-			status(AutoRollDB.infoMessage))
 		ns.print(nil, "debugmode - enable/disable debug messages in chat window", status(AutoRollDB.debugMode))
 		ns.print(nil, "list - list items")
 		ns.print(nil, "add <itemId> - add an item to the item list")
@@ -47,9 +45,6 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 
 	elseif cmd == "debugmode" then
 		toggle("DebugMode", "debugMode")
-
-	elseif cmd == "infomessage" then
-		toggle("Info message", "infoMessage")
 
 	elseif cmd == "list" then
 		local requesting

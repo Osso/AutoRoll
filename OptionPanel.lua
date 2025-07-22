@@ -289,16 +289,6 @@ panel:SetScript("OnShow", function()
 
 
 
-	--- Checkbutton "Info message"
-	local infoName = "InfoMessage"
-	local infoFrame = panel:GetName() .. infoName
-	panel[infoName] = CreateFrame("CheckButton", infoFrame, panel, "OptionsCheckButtonTemplate")
-	setPoints(panel[infoName], {"TOPLEFT", panel.EnableAR, "BOTTOMLEFT", 0, 2})
-	_G[infoFrame .. "Text"]:SetText("Print info messages")
-	panel[infoName]:SetScript("OnClick", function() setValue("infoMessage", not getValue("infoMessage")) end)
-	setControl(panel[infoName], function() panel[infoName]:SetChecked(getValue("infoMessage")) end)
-	setTooltip(panel[infoName], "Info message",
-		"Print info message on any executed loot roll in chat window.", {"Default: enabled", 0.6, 0.6, 0.6})
 
 	--- Inset border frame for itemList (scrollFrame)
 	local listName = "itemList"
