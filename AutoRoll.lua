@@ -5,7 +5,6 @@ local version = 1
 ns.ModeLabels = {GREED, NEED, ROLL_DISENCHANT, PASS, "Do nothing"}
 ns.AutoRollDB_defaults = {
 	enabled = true,
-	autoRollAll = false,
 	infoMessage = true,
 	debugMode = false,
 	version = 1,
@@ -94,11 +93,7 @@ function main:START_LOOT_ROLL(rollID)
 
 	local rolling = itemNames[name] -- 1, 2, 3, 4, 5
 	if not rolling then
-		if AutoRollDB.autoRollAll then -- if nil
-			rolling = 1 -- auto greed
-		else
-			rolling = 99
-		end
+		rolling = 1 -- auto greed when not in item list
 	end
 
 	if (rolling <= 4) and (reasonNeed or reasonGreed or reasonDisenchant) then

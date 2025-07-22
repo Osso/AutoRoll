@@ -31,8 +31,7 @@ SlashCmdList["AUTOROLL"] = function(_cmd,internal)
 
 	if(cmd=="")then
 		ns.print("Chat command list for /ar & /autoroll")
-		ns.print(nil,"toggle - enable/disable AutoRoll's functionality",status(AutoRollDB.enabled))
-		ns.print(nil,"autorollall - enable/disable AutoRoll on all items (using item list or greed).",status(AutoRollDB.autoRollAll))
+		ns.print(nil,"toggle - enable/disable AutoRoll on all items",status(AutoRollDB.enabled))
 		ns.print(nil,"infomessage - enable/disable info message for any executed loot roll in chat window",status(AutoRollDB.infoMessage))
 		ns.print(nil,"debugmode - enable/disable debug messages in chat window",status(AutoRollDB.debugMode))
 		ns.print(nil,"list - list items")
@@ -42,15 +41,13 @@ SlashCmdList["AUTOROLL"] = function(_cmd,internal)
 		ns.print(nil,"reset - reset the item list to default")
 
 	elseif(cmd=="toggle")then
-		toggle("AutoRoll's functionality", "enabled")
+		toggle("AutoRoll on all items", "enabled")
 		ns.AddOnEnabled();
 
 	elseif(cmd=="debugmode")then
 		toggle("DebugMode","debugMode")
 
 
-	elseif(cmd=="autorollall")then
-		toggle("AutoRoll all","autoRollAll")
 
 	elseif(cmd=="infomessage")then
 		toggle("Info message","infoMessage")

@@ -279,24 +279,15 @@ panel:SetScript("OnShow", function()
 	_G[N.."Text"]:SetText("Enable AutoRoll")
 	panel[n]:SetScript("OnClick",function() setValue("enabled",not getValue("enabled")); end);
 	setControl(panel[n],function() panel[n]:SetChecked(getValue("enabled")); end);
-	setTooltip(panel[n],"Enable AutoRoll","Enable/Disable automatic rolling on listed items.")
+	setTooltip(panel[n],"Enable AutoRoll","Enable/Disable automatic rolling on all items. Uses item list settings when available, otherwise rolls greed.")
 
 
-	--- Checkbutton "AutoRoll all"
-	local n,N="AutoRollAll";
-	N=panel:GetName()..n;
-	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
-	setPoints(panel[n],{"TOPLEFT", panel.EnableAR, "BOTTOMLEFT", 0, 2});
-	_G[N.."Text"]:SetText("Automatically roll on all")
-	panel[n]:SetScript("OnClick",function() setValue("autoRollAll",not getValue("autoRollAll")); end);
-	setControl(panel[n],function() panel[n]:SetChecked(getValue("autoRollAll")); end);
-	setTooltip(panel[n],"Automatically roll on all","Automatically roll on all group roll items", {"This function uses the item list below. For all other items will roll greed.",0,.8,.95,1},{"Default: disabled",.6,.6,.6})
 
 	--- Checkbutton "Info message"
 	local n,N="InfoMessage";
 	N=panel:GetName()..n;
 	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
-	setPoints(panel[n],{"TOPLEFT", panel.AutoRollAll, "BOTTOMLEFT", 0, 2});
+	setPoints(panel[n],{"TOPLEFT", panel.EnableAR, "BOTTOMLEFT", 0, 2});
 	_G[N.."Text"]:SetText("Print info messages")
 	panel[n]:SetScript("OnClick",function() setValue("infoMessage",not getValue("infoMessage")); end);
 	setControl(panel[n],function() panel[n]:SetChecked(getValue("infoMessage")); end);
