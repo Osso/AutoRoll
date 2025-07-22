@@ -1,14 +1,31 @@
 
 local addon, ns = ...
 local version = 1
-ns.ModeLabels = {GREED, NEED, ROLL_DISENCHANT, PASS, "Do nothing"}
+
+-- Roll constants (match WoW API RollOnLoot parameters)
+local ROLL_PASS = 0
+local ROLL_NEED = 1
+local ROLL_GREED = 2
+local ROLL_DISENCHANT = 3
+local ROLL_TRANSMOG = 4
+local ROLL_DO_NOTHING = 5  -- Internal only - don't roll at all
+
+-- ModeLabels indexed by our roll constants (0-based indexing won't work for Lua tables, so we adjust)
+ns.ModeLabels = {
+	[ROLL_GREED] = GREED,
+	[ROLL_NEED] = NEED,
+	[ROLL_DISENCHANT] = ROLL_DISENCHANT,
+	[ROLL_TRANSMOG] = ROLL_TRANSMOG,
+	[ROLL_PASS] = PASS,
+	[ROLL_DO_NOTHING] = "Do nothing"
+}
 ns.AutoRollDB_defaults = {
 	enabled = true,
 	debugMode = false,
 	version = 1,
 	items = {
-		[120945] = 1, -- Primal Spirit
-		[116920] = 5, -- True steel lockbox
+		[120945] = ROLL_GREED, -- Primal Spirit
+		[116920] = ROLL_DO_NOTHING, -- True steel lockbox
 	}
 }
 AutoRollDB = ns.AutoRollDB_defaults
@@ -84,31 +101,32 @@ function main:START_LOOT_ROLL(rollID)
 		return
 	end
 
-	local rolling = itemNames[name] -- 1, 2, 3, 4, 5
-	if not rolling then
-		rolling = 1 -- auto greed when not in item list
+	local itemRollMode = itemNames[name]
+	if not itemRollMode then
+		itemRollMode = ROLL_GREED -- auto greed when not in item list
 	end
 
 
-	if canNeed and rolling == 2 then
-		RollOnLoot(rollID, 1) -- need
-	elseif canDisenchant and rolling == 3 then
-		RollOnLoot(rollID, 3) -- disenchant
-	elseif rolling == 4 then
-		RollOnLoot(rollID, 0) -- pass
-	elseif canGreed and rolling <= 3 then -- with fallback if you can't roll "need" or "disenchant" an item
-		RollOnLoot(rollID, 2) -- greed
+	if canNeed and itemRollMode == ROLL_NEED then
+		RollOnLoot(rollID, ROLL_NEED)
+	elseif canDisenchant and itemRollMode == ROLL_DISENCHANT then
+		RollOnLoot(rollID, ROLL_DISENCHANT)
+	elseif canGreed and itemRollMode == ROLL_GREED then
+		RollOnLoot(rollID, ROLL_GREED)
+	elseif itemRollMode == ROLL_PASS then
+		RollOnLoot(rollID, ROLL_PASS)
+	-- ROLL_DO_NOTHING means don't roll at all
 	end
 
 	ns.debugPrint(
 		"Event: START_LOOT_ROLL",
 		"itemName: " .. (name or "unknown"),
 		"rollID: " .. rollID,
-		"Action: " .. (ns.ModeLabels[rolling] or "nothing")
+		"Action: " .. (ns.ModeLabels[itemRollMode] or "nothing")
 	)
 
-	if rolling ~= 5 then
-		ns.print(name, "=", ns.ModeLabels[rolling])
+	if itemRollMode ~= ROLL_DO_NOTHING then
+		ns.print(name, "=", ns.ModeLabels[itemRollMode])
 	end
 end
 
