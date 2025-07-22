@@ -13,16 +13,17 @@ end
 SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 	local cmd, arg = strsplit(" ", cmd_str:lower(), 2)
 
-	local n, name = tonumber(arg)
+	local itemId = tonumber(arg)
+    local itemName = nil
 
-	if n then
-		name = GetItemInfo(n)
-		if not name and internal ~= true then
-			ns.GET_ITEM_INFO_RECEIVED = {"sc", cmd_str, n}
+	if itemId then
+		itemName = GetItemInfo(itemId)
+		if not itemName and internal ~= true then
+			ns.GET_ITEM_INFO_RECEIVED = {"sc", cmd_str, itemId}
 			C_Timer.After(3, function()
 				if ns.GET_ITEM_INFO_RECEIVED then
 					ns.GET_ITEM_INFO_RECEIVED = nil
-					ns.print(("Sorry, it was not able to get more informations to item id %d. Please check the item id."):format(n))
+					ns.print(("Sorry, could not get information for item id %d. Please check the item id."):format(itemId))
 				end
 			end)
 			return
@@ -61,40 +62,40 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 		-- second run, print item list
 		ns.print("Current item list")
 		for i, v in pairs(AutoRollDB.items) do
-			local itemName = GetItemInfo(i)
-			print(("Id: %d (%s), Mode: %s"):format(i, itemName, ns.ModeLabels[v] or "?"))
+			local name = GetItemInfo(i)
+			print(("Id: %d (%s), Mode: %s"):format(i, name, ns.ModeLabels[v] or "?"))
 		end
 
 	elseif cmd == "add" then
 		if ns.GET_ITEM_INFO_RECEIVED then
 			ns.print("Sorry, that is too fast. This addon request the item name and waiting on answer " ..
 				"from blizzards item database.")
-		elseif n ~= nil and n > 0 and not AutoRollDB.items[n] then
-			AutoRollDB.items[n] = 1
+		elseif itemId ~= nil and itemId > 0 and not AutoRollDB.items[itemId] then
+			AutoRollDB.items[itemId] = 1
 			ns.updateItemNames()
-			ns.print(("ItemID %d found... %s added to AutoRoll's item list. Mode: %s"):format(n, name, GREED))
+			ns.print(("ItemID %d found... %s added to AutoRoll's item list. Mode: %s"):format(itemId, itemName, GREED))
 		else
-			ns.print(("ItemID %d unknown/invalid... please check the given numbers."):format(n))
+			ns.print(("ItemID %d unknown/invalid... please check the given numbers."):format(itemId))
 		end
 
 	elseif cmd == "del" then
-		if n ~= nil and AutoRollDB.items[n] then
-			AutoRollDB.items[n] = nil
+		if itemId ~= nil and AutoRollDB.items[itemId] then
+			AutoRollDB.items[itemId] = nil
 			ns.updateItemNames()
-			ns.print(("ItemID %d (%s) removed from AutoRoll's item list"):format(n, name))
+			ns.print(("ItemID %d (%s) removed from AutoRoll's item list"):format(itemId, itemName))
 		else
-			ns.print(("Id %d not found in item list."):format(n))
+			ns.print(("Id %d not found in item list."):format(itemId))
 		end
 
 	elseif cmd == "mode" then
-		if n and n > 0 and AutoRollDB.items[n] then
-			AutoRollDB.items[n] = AutoRollDB.items[n] == #ns.ModeLabels and 1 or AutoRollDB.items[n] + 1
+		if itemId and itemId > 0 and AutoRollDB.items[itemId] then
+			AutoRollDB.items[itemId] = AutoRollDB.items[itemId] == #ns.ModeLabels and 1 or AutoRollDB.items[itemId] + 1
 			if AutoRollPanel and AutoRollPanel:IsShown() then
-				AutoRollPanel.changes.items[n] = AutoRollDB.items[n]
+				AutoRollPanel.changes.items[itemId] = AutoRollDB.items[itemId]
 			end
-			ns.print(("Changed mode for itemId %d (%s) to %s"):format(n, name, ns.ModeLabels[AutoRollDB.items[n]]))
+			ns.print(("Changed mode for itemId %d (%s) to %s"):format(itemId, itemName, ns.ModeLabels[AutoRollDB.items[itemId]]))
 		else
-			ns.print(("ItemId %d not found in item list."):format(n))
+			ns.print(("ItemId %d not found in item list."):format(itemId))
 		end
 
 	elseif cmd == "reset" then

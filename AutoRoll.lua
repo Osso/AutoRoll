@@ -72,17 +72,11 @@ function ns.AddOnEnabled()
 end
 
 function main:ADDON_LOADED(name)
-	if addon ~= name then return end
+	if addon ~= name then
+        return
+    end
 
 	ns.print("|Cffffff00Addon loaded...|r")
-	if AutoRollDB.version == nil then AutoRollDB.version = 0 end
-	if AutoRollDB.version <= 0.91 then
-		for i, v in pairs(ns.AutoRollDB_defaults.items) do
-			if AutoRollDB.items[i] == nil then
-				AutoRollDB.items[i] = v
-			end
-		end
-	end
 	AutoRollDB.version = version
 	if AutoRollDB.enabled then
 		ns.AddOnEnabled()
@@ -101,11 +95,7 @@ function main:START_LOOT_ROLL(rollID)
 		return
 	end
 
-	local itemRollMode = itemNames[name]
-	if not itemRollMode then
-		itemRollMode = ROLL_GREED -- auto greed when not in item list
-	end
-
+	local itemRollMode = itemNames[name] or ROLL_GREED -- auto greed when not in item list
 
 	if canNeed and itemRollMode == ROLL_NEED then
 		RollOnLoot(rollID, ROLL_NEED)
