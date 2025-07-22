@@ -112,7 +112,7 @@ function main:START_LOOT_ROLL(rollID)
 
 	ns.debugPrint(
 		"Event: START_LOOT_ROLL",
-		"itemName: " .. name or "unknown",
+		"itemName: " .. (name or "unknown"),
 		"rollID: " .. rollID,
 		"Action: " .. (ns.ModeLabels[rolling] or "nothing")
 	)

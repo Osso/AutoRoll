@@ -1,14 +1,20 @@
 {
     "Lua.diagnostics.globals": [
-        "GREED", "NEED", "ROLL_DISENCHANT", "PASS",
-        "GetItemInfo", "CreateFrame", "wipe", "ipairs", "pairs",
-        "print", "GetTime", "C_Timer", "StaticPopup_Show",
-        "RollOnLoot", "ConfirmLootRoll", "GetLootRollItemInfo",
-        "GetLootRollTimeLeft", "GetNumLootToRoll", "LOOT_ROLL_TYPE_NEED",
-        "LOOT_ROLL_TYPE_GREED", "LOOT_ROLL_TYPE_DISENCHANT", "LOOT_ROLL_TYPE_PASS",
-        "strsplit", "SlashCmdList"
+        "CreateFrame", "GameTooltip", "InterfaceOptionsFramePanelContainer",
+        "UIDropDownMenu_SetWidth", "UIDropDownMenu_Initialize", "UIDropDownMenu_CreateInfo",
+        "UIDropDownMenu_AddButton", "UIDropDownMenu_SetSelectedValue", "UIDropDownMenu_Refresh",
+        "HybridScrollFrame_GetOffset", "HybridScrollFrame_Update", "HybridScrollFrame_CreateButtons",
+        "EasyMenu_Initialize", "ToggleDropDownMenu", "Settings", "_G", "AutoRollPanel",
+        "GetItemInfo", "GetLootRollItemInfo", "RollOnLoot", "ConfirmLootRoll",
+        "C_LootHistory", "C_Timer",
+        "GREED", "NEED", "ROLL_DISENCHANT", "PASS", "OPTIONS", "ADD", "ITEMS", "DELETE", "CANCEL", "CLOSE",
+        "AutoRollDB", "SlashCmdList", "SLASH_AUTOROLL1", "SLASH_AUTOROLL2",
+        "GetAddOnMetadata", "CopyTable", "wipe", "strsplit", "ReloadUI",
+        "print", "tinsert", "floor", "strlen", "table", "ipairs", "pairs",
+        "type", "tostring", "tonumber", "rawset", "setmetatable", "select"
     ],
     "Lua.workspace.library": [
         "${workspaceFolder}"
-    ]
+    ],
+    "Lua.runtime.version": "Lua 5.1"
 }
