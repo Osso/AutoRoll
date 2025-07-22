@@ -10,9 +10,6 @@ ns.AutoRollDB_defaults = {
 	autoRollAll=false,
 	infoMessage=true,
 	debugMode=false,
-	LDB_Icon = {
-		enabled=true
-	},
 	version = 1,
 	items = {
 		[120945]=1, -- Primal Spirit
@@ -79,10 +76,6 @@ function main:ADDON_LOADED(name)
 		end
 	end
 	AutoRollDB.version=version;
-	if(AutoRollDB.LDB_Icon==nil)then
-		AutoRollDB.LDB_Icon={enabled=true};
-	end
-	ns.LDB_Register();
 	if(AutoRollDB.enabled)then
 		ns.AddOnEnabled();
 	end
