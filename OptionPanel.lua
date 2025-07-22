@@ -281,21 +281,12 @@ panel:SetScript("OnShow", function()
 	setControl(panel[n],function() panel[n]:SetChecked(getValue("enabled")); end);
 	setTooltip(panel[n],"Enable AutoRoll","Enable/Disable automatic rolling on listed items.")
 
-	--- Checkbutton "AutoConfirm all"
-	local n,N="AutoConfirmAll";
-	N=panel:GetName()..n;
-	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
-	setPoints(panel[n],{"TOPLEFT", panel.EnableAR, "BOTTOMLEFT", 0, 2});
-	_G[N.."Text"]:SetText("Automatically confirm all")
-	panel[n]:SetScript("OnClick",function() setValue("autoConfirmAll",not getValue("autoConfirmAll")); end);
-	setControl(panel[n],function() panel[n]:SetChecked(getValue("autoConfirmAll")); end);
-	setTooltip(panel[n],"Automatically confirm all","Automatically confirm all group roll requests",{"Not recommended",1,.5,0},{"Default: disabled",.6,.6,.6})
 
 	--- Checkbutton "AutoRoll all"
 	local n,N="AutoRollAll";
 	N=panel:GetName()..n;
 	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
-	setPoints(panel[n],{"TOPLEFT", panel.AutoConfirmAll, "BOTTOMLEFT", 0, 2});
+	setPoints(panel[n],{"TOPLEFT", panel.EnableAR, "BOTTOMLEFT", 0, 2});
 	_G[N.."Text"]:SetText("Automatically roll on all")
 	panel[n]:SetScript("OnClick",function() setValue("autoRollAll",not getValue("autoRollAll")); end);
 	setControl(panel[n],function() panel[n]:SetChecked(getValue("autoRollAll")); end);

@@ -32,7 +32,6 @@ SlashCmdList["AUTOROLL"] = function(_cmd,internal)
 	if(cmd=="")then
 		ns.print("Chat command list for /ar & /autoroll")
 		ns.print(nil,"toggle - enable/disable AutoRoll's functionality",status(AutoRollDB.enabled))
-		ns.print(nil,"autoconfirmall - enable/disable AutoConfirm on all items.",status(AutoRollDB.autoConfirmAll))
 		ns.print(nil,"autorollall - enable/disable AutoRoll on all items (using item list or greed).",status(AutoRollDB.autoRollAll))
 		ns.print(nil,"infomessage - enable/disable info message for any executed loot roll in chat window",status(AutoRollDB.infoMessage))
 		ns.print(nil,"debugmode - enable/disable debug messages in chat window",status(AutoRollDB.debugMode))
@@ -49,8 +48,6 @@ SlashCmdList["AUTOROLL"] = function(_cmd,internal)
 	elseif(cmd=="debugmode")then
 		toggle("DebugMode","debugMode")
 
-	elseif(cmd=="autoconfirmall")then
-		toggle("AutoConfirm all","autoConfirmAll")
 
 	elseif(cmd=="autorollall")then
 		toggle("AutoRoll all","autoRollAll")

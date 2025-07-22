@@ -5,7 +5,6 @@ local version = 1
 ns.ModeLabels = {GREED, NEED, ROLL_DISENCHANT, PASS, "Do nothing"}
 ns.AutoRollDB_defaults = {
 	enabled = true,
-	autoConfirmAll = false,
 	autoRollAll = false,
 	infoMessage = true,
 	debugMode = false,
@@ -129,12 +128,11 @@ end
 
 function main:CONFIRM_LOOT_ROLL(rollID, arg2)
 	local _, name, _, _, _, _, _, _, reasonNeed, reasonGreed, reasonDisenchant = GetLootRollItemInfo(rollID)
-	if autoConfirm[rollID] or AutoRollDB.autoConfirmAll == true then
+	if autoConfirm[rollID] then
 		ns.debugPrint(
 			"Event: CONFIRM_LOOT_ROLL",
 			"rollID: " .. rollID,
-			"autoConfirm[" .. rollID .. "]: " .. (autoConfirm[rollID] and "1" or "0"),
-			"autoConfirmAll: " .. (AutoRollDB.autoConfirmAll and "1" or "0")
+			"autoConfirm[" .. rollID .. "]: " .. (autoConfirm[rollID] and "1" or "0")
 		)
 		ConfirmLootRoll(rollID, arg2)
 		autoConfirm[rollID] = nil
