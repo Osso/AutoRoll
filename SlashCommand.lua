@@ -31,7 +31,7 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 	end
 
 	if cmd == "" then
-		ns.print("Chat command list for /ar & /autoroll")
+		ns.print("Chat command list for /autoroll")
 		ns.print(nil, "toggle - enable/disable AutoRoll on all items", status(AutoRollDB.enabled))
 		ns.print(nil, "debug - enable/disable debug messages in chat window", status(AutoRollDB.debugMode))
 		ns.print(nil, "list - list items")
@@ -109,4 +109,3 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 end
 
 SLASH_AUTOROLL1 = "/autoroll"
-SLASH_AUTOROLL2 = "/ar"
