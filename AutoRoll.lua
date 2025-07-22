@@ -1,6 +1,5 @@
 
 local addon, ns = ...
-local autoConfirm = {}
 local version = 1
 ns.ModeLabels = {GREED, NEED, ROLL_DISENCHANT, PASS, "Do nothing"}
 ns.AutoRollDB_defaults = {
@@ -48,12 +47,10 @@ local main = CreateFrame("Frame", "AutoRollFrame")
 function ns.AddOnEnabled()
 	if AutoRollDB.enabled then
 		main:RegisterEvent("START_LOOT_ROLL")
-		main:RegisterEvent("CONFIRM_LOOT_ROLL")
 		main:RegisterEvent("LOOT_HISTORY_ROLL_CHANGED")
 		updateItemNames()
 	else
 		main:UnregisterEvent("START_LOOT_ROLL")
-		main:UnregisterEvent("CONFIRM_LOOT_ROLL")
 		main:UnregisterEvent("LOOT_HISTORY_ROLL_CHANGED")
 	end
 	ns.print("|cffffff00Addon", (AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
@@ -78,8 +75,7 @@ function main:ADDON_LOADED(name)
 end
 
 function main:START_LOOT_ROLL(rollID)
-	local _, name, _, _, _, canNeed, canGreed, canDisenchant, reasonNeed, reasonGreed, reasonDisenchant =
-		GetLootRollItemInfo(rollID)
+	local _, name, _, _, _, canNeed, canGreed, canDisenchant = GetLootRollItemInfo(rollID)
 
 	if not rollID or not name then
 		ns.debugPrint(
@@ -95,9 +91,6 @@ function main:START_LOOT_ROLL(rollID)
 		rolling = 1 -- auto greed when not in item list
 	end
 
-	if (rolling <= 4) and (reasonNeed or reasonGreed or reasonDisenchant) then
-		autoConfirm[rollID] = true
-	end
 
 	if canNeed and rolling == 2 then
 		RollOnLoot(rollID, 1) -- need
@@ -121,17 +114,6 @@ function main:START_LOOT_ROLL(rollID)
 	end
 end
 
-function main:CONFIRM_LOOT_ROLL(rollID, arg2)
-	if autoConfirm[rollID] then
-		ns.debugPrint(
-			"Event: CONFIRM_LOOT_ROLL",
-			"rollID: " .. rollID,
-			"autoConfirm[" .. rollID .. "]: " .. (autoConfirm[rollID] and "1" or "0")
-		)
-		ConfirmLootRoll(rollID, arg2)
-		autoConfirm[rollID] = nil
-	end
-end
 
 function main:LOOT_HISTORY_ROLL_CHANGED(index, player) -- maybe for winner popup frames replacement?
 	--local rollID, link, numPlayers, isDone, winner, isMasterLoot = C_LootHistory.GetItem(index)
