@@ -26,119 +26,121 @@ local function setControl(frame, fnc)
 	table.insert(panel.controls, frame)
 end
 
-local function setTooltip(frame,...)
-	if(select('#',...)==0)then return end
-	frame.tooltip = {...};
-	frame:SetScript("OnLeave",function() GameTooltip:Hide(); end);
-	frame:SetScript("OnEnter",function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT");
-		GameTooltip:AddLine(self.tooltip[1]);
-		for i=2, #self.tooltip do
-			if(type(self.tooltip[i])=="table")then
+local function setTooltip(frame, ...)
+	if select('#', ...) == 0 then return end
+	frame.tooltip = {...}
+	frame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	frame:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+		GameTooltip:AddLine(self.tooltip[1])
+		for i = 2, #self.tooltip do
+			if type(self.tooltip[i]) == "table" then
 				GameTooltip:AddLine(unpack(self.tooltip[i]))
 			else
-				GameTooltip:AddLine(self.tooltip[i],1,1,1,1);
+				GameTooltip:AddLine(self.tooltip[i], 1, 1, 1, 1)
 			end
 		end
 		GameTooltip:Show()
-	end);
+	end)
 end
 
-local function setPoints(frame,...)
-	frame = (type(frame)=="string" and panel[frame]) or (type(frame)=="table" and frame) or nil;
-	if(not frame)then return end
+local function setPoints(frame, ...)
+	frame = (type(frame) == "string" and panel[frame]) or (type(frame) == "table" and frame) or nil
+	if not frame then return end
 
-	local point1=...;
-	if(point1==true)then
-		frame:SetAllPoints();
-	elseif(#{...}>0)then
-		for _,point in ipairs({...})do
+	local point1 = ...
+	if point1 == true then
+		frame:SetAllPoints()
+	elseif #{...} > 0 then
+		for _, point in ipairs({...}) do
 			frame:SetPoint(unpack(point))
 		end
 	else
-		frame:SetPoint("TOPLEFT");
+		frame:SetPoint("TOPLEFT")
 	end
 end
 
 ---------------------------------------------------------------
 ---------------------------------------------------------------
 
-local itemIds = {};
+local itemIds = {}
 local function updateItemList(self)
-	local offset = HybridScrollFrame_GetOffset(self);
+	local offset = HybridScrollFrame_GetOffset(self)
 
-	if(not panel.changes.items)then
-		panel.changes.items = CopyTable(AutoRollDB.items);
-		wipe(itemIds);
+	if not panel.changes.items then
+		panel.changes.items = CopyTable(AutoRollDB.items)
+		wipe(itemIds)
 	end
-	if(#itemIds==0)then
-		for i,v in pairs(panel.changes.items)do
-			if(v~=nil)then
-				table.insert(itemIds,i);
+	if #itemIds == 0 then
+		for i, v in pairs(panel.changes.items) do
+			if v ~= nil then
+				table.insert(itemIds, i)
 			end
 		end
-		table.sort(itemIds,function(a,b) return a>b; end);
+		table.sort(itemIds, function(a, b) return a > b end)
 	end
-	local nItems,items = #itemIds,panel.changes.items;
+	local nItems, items = #itemIds, panel.changes.items
 
-	for i=1, #self.buttons do
-		local index = offset+i;
-		local button = self.buttons[i];
+	for i = 1, #self.buttons do
+		local index = offset + i
+		local button = self.buttons[i]
 
-		if(itemIds[index])then
-			local Id = itemIds[index];
-			local Name, _, Rarity, _, _, _, _, _, _, Texture = GetItemInfo(Id);
+		if itemIds[index] then
+			local Id = itemIds[index]
+			local Name, _, _, _, _, _, _, _, _, Texture = GetItemInfo(Id)
 
-			button.ItemID:SetText(Id);
-			button.ItemIcon:SetTexture(Texture);
-			button.ItemName:SetText(Name);
-			button.ItemName:SetPoint("RIGHT",button.Mode,"LEFT",-10,0); -- limit width of font string
+			button.ItemID:SetText(Id)
+			button.ItemIcon:SetTexture(Texture)
+			button.ItemName:SetText(Name)
+			button.ItemName:SetPoint("RIGHT", button.Mode, "LEFT", -10, 0) -- limit width of font string
 
-			button.Mode.index = Id;
-			button.Mode.value = items[Id];
+			button.Mode.index = Id
+			button.Mode.value = items[Id]
 
-			UIDropDownMenu_SetWidth(button.Mode, 94);
+			UIDropDownMenu_SetWidth(button.Mode, 94)
 			UIDropDownMenu_Initialize(button.Mode, function()
-				for v,t in pairs(ns.ModeLabels) do
-					local info = UIDropDownMenu_CreateInfo();
-					info.value = v; info.text = t;
-					info.arg1 = button.Mode; info.arg2 = v;
-					info.func = function(self,frame,value)
-						UIDropDownMenu_SetSelectedValue(frame, value);
-						panel.changes.items[button.Mode.index]=value;
-						button.Mode.value=value;
+				for v, t in pairs(ns.ModeLabels) do
+					local info = UIDropDownMenu_CreateInfo()
+					info.value = v
+					info.text = t
+					info.arg1 = button.Mode
+					info.arg2 = v
+					info.func = function(dropdownSelf, frame, value)
+						UIDropDownMenu_SetSelectedValue(frame, value)
+						panel.changes.items[button.Mode.index] = value
+						button.Mode.value = value
 					end
-					UIDropDownMenu_AddButton(info);
+					UIDropDownMenu_AddButton(info)
 				end
-			end);
-			UIDropDownMenu_SetSelectedValue(button.Mode, items[Id]);
+			end)
+			UIDropDownMenu_SetSelectedValue(button.Mode, items[Id])
 
-			local b=_G[button.Mode:GetName().."Button"];
-			b:SetHitRectInsets(-(button.Mode:GetWidth()-(b:GetWidth()*2)),-3,-3,-3)
+			local b = _G[button.Mode:GetName() .. "Button"]
+			b:SetHitRectInsets(-(button.Mode:GetWidth() - (b:GetWidth() * 2)), -3, -3, -3)
 
-			button.Delete:SetScript("OnClick",function()
-				panel.changes.items[Id] = nil;
-				wipe(itemIds);
-				updateItemList(self);
-			end);
+			button.Delete:SetScript("OnClick", function()
+				panel.changes.items[Id] = nil
+				wipe(itemIds)
+				updateItemList(self)
+			end)
 
-			button:SetBackdropColor(1, 1, 1, (index/2==floor(index/2)) and 0 or .1 );
+			button:SetBackdropColor(1, 1, 1, (index / 2 == floor(index / 2)) and 0 or 0.1)
 
-			button:Show();
+			button:Show()
 		else
-			button:Hide();
+			button:Hide()
 		end
 	end
 
-	HybridScrollFrame_Update(self, nItems * self.buttonHeight, #self.buttons * self.buttonHeight);
+	HybridScrollFrame_Update(self, nItems * self.buttonHeight, #self.buttons * self.buttonHeight)
 end
 
 local function checkInput(state)
-	local obj,objIsNumber,itemName,itemLink,itemTexture,itemId = panel.InputNewItem:GetText();
+	local obj, objIsNumber, itemName, itemLink, itemTexture, itemId = panel.InputNewItem:GetText()
 
-	if (obj) then
-		objIsNumber = (tonumber(obj) and true or false);
-		itemName,itemLink,_,_,_,_,_,_,_,itemTexture = GetItemInfo(obj);
+	if obj then
+		objIsNumber = (tonumber(obj) and true or false)
+		itemName, itemLink, _, _, _, _, _, _, _, itemTexture = GetItemInfo(obj)
 	end
 
 	if (itemLink) then
@@ -159,14 +161,14 @@ local function checkInput(state)
 		end
 	end
 
-	panel.ItemHelper:SetText( ("|T%s:24:24:0:0|t %s"):format(itemTexture,itemName) );
+	panel.ItemHelper:SetText(("|T%s:24:24:0:0|t %s"):format(itemTexture, itemName))
 
-	if(itemId)then
-		panel.InputNewItem.itemID = itemId;
-		panel.AddNewItem:Enable();
+	if itemId then
+		panel.InputNewItem.itemID = itemId
+		panel.AddNewItem:Enable()
 	else
-		panel.InputNewItem.itemID = nil;
-		panel.AddNewItem:Disable();
+		panel.InputNewItem.itemID = nil
+		panel.AddNewItem:Disable()
 	end
 
 	ns.debugPrint(
@@ -259,7 +261,7 @@ panel:SetScript("OnShow", function()
 	--- Title
 	panel.title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge");
 	setPoints(panel.title,{"TOPLEFT", panel, 12, -12});
-	panel.title:SetText("|TInterface\\Buttons\\UI-GroupLoot-Dice-Up:17:17:0:0|t "..addon.. " - "..OPTIONS);
+	panel.title:SetText("|TInterface\\Buttons\\UI-GroupLoot-Dice-Up:17:17:0:0|t " .. addon .. " - " .. OPTIONS)
 
 	--- Subtitle
 	panel.subtitle = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall");
@@ -272,70 +274,76 @@ panel:SetScript("OnShow", function()
 	panel.credit:SetText("Credit: Azial for initial idea and first piece of code in german WoW forum.")
 
 	--- Checkbutton "Enable <addon>"
-	local n,N="EnableAR";
-	N=panel:GetName()..n;
-	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
-	setPoints(panel[n],{"TOPLEFT",panel,"TOPRIGHT",-220,-6});
-	_G[N.."Text"]:SetText("Enable AutoRoll")
-	panel[n]:SetScript("OnClick",function() setValue("enabled",not getValue("enabled")); end);
-	setControl(panel[n],function() panel[n]:SetChecked(getValue("enabled")); end);
-	setTooltip(panel[n],"Enable AutoRoll","Enable/Disable automatic rolling on all items. Uses item list settings when available, otherwise rolls greed.")
+	local enableName, enableFrame = "EnableAR"
+	enableFrame = panel:GetName() .. enableName
+	panel[enableName] = CreateFrame("CheckButton", enableFrame, panel, "OptionsCheckButtonTemplate")
+	setPoints(panel[enableName], {"TOPLEFT", panel, "TOPRIGHT", -220, -6})
+	_G[enableFrame .. "Text"]:SetText("Enable AutoRoll")
+	panel[enableName]:SetScript("OnClick", function() setValue("enabled", not getValue("enabled")) end)
+	setControl(panel[enableName], function() panel[enableName]:SetChecked(getValue("enabled")) end)
+	setTooltip(panel[enableName], "Enable AutoRoll", "Enable/Disable automatic rolling on all items. Uses item list settings when available, otherwise rolls greed.")
 
 
 
 	--- Checkbutton "Info message"
-	local n,N="InfoMessage";
-	N=panel:GetName()..n;
-	panel[n]=CreateFrame("CheckButton",N,panel,"OptionsCheckButtonTemplate");
-	setPoints(panel[n],{"TOPLEFT", panel.EnableAR, "BOTTOMLEFT", 0, 2});
-	_G[N.."Text"]:SetText("Print info messages")
-	panel[n]:SetScript("OnClick",function() setValue("infoMessage",not getValue("infoMessage")); end);
-	setControl(panel[n],function() panel[n]:SetChecked(getValue("infoMessage")); end);
-	setTooltip(panel[n],"Info message","Print info message on any executed loot roll in chat window.", {"Default: enabled",.6,.6,.6})
+	local infoName, infoFrame = "InfoMessage"
+	infoFrame = panel:GetName() .. infoName
+	panel[infoName] = CreateFrame("CheckButton", infoFrame, panel, "OptionsCheckButtonTemplate")
+	setPoints(panel[infoName], {"TOPLEFT", panel.EnableAR, "BOTTOMLEFT", 0, 2})
+	_G[infoFrame .. "Text"]:SetText("Print info messages")
+	panel[infoName]:SetScript("OnClick", function() setValue("infoMessage", not getValue("infoMessage")) end)
+	setControl(panel[infoName], function() panel[infoName]:SetChecked(getValue("infoMessage")) end)
+	setTooltip(panel[infoName], "Info message", "Print info message on any executed loot roll in chat window.", {"Default: enabled", 0.6, 0.6, 0.6})
 
 	--- Inset border frame for itemList (scrollFrame)
-	local n, N, b="itemList"; N, b=panel:GetName()..n, n.."Border";
-	panel[b] = CreateFrame("Frame", nil, panel);
-	setPoints(panel[b],{"TOPLEFT", panel.title, "BOTTOMLEFT", 0, -66},{"BOTTOMRIGHT", -14, 105});
-	panel[b]:SetBackdrop({ bgFile="Interface\\TutorialFrame\\TutorialFrameBackground", edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border", tile=true, tileSize=32, edgeSize=20, insets={left=4,right=4,top=4,bottom=4}});
+	local listName, listFrame, borderName = "itemList", panel:GetName() .. "itemList", "itemListBorder"
+	panel[borderName] = CreateFrame("Frame", nil, panel)
+	setPoints(panel[borderName], {"TOPLEFT", panel.title, "BOTTOMLEFT", 0, -66}, {"BOTTOMRIGHT", -14, 105})
+	panel[borderName]:SetBackdrop({
+		bgFile = "Interface\\TutorialFrame\\TutorialFrameBackground",
+		edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+		tile = true, tileSize = 32, edgeSize = 20,
+		insets = {left = 4, right = 4, top = 4, bottom = 4}
+	})
 
 	--- itemList ScrollFrame
-	panel[n] = CreateFrame("ScrollFrame",N,panel[b],"BasicHybridScrollFrameTemplate");
-	setPoints(panel[n],{"TOPLEFT",8,-7},{"BOTTOMRIGHT",-28,7});
-	setPoints(panel[n].scrollBar,{"TOPLEFT",panel[n],"TOPRIGHT", 0, -14},{"BOTTOMLEFT",panel[n],"BOTTOMRIGHT", 0, 13});
-	panel[n].scrollBar.doNotHide=true;
-	panel[n].update = updateItemList;
-	HybridScrollFrame_CreateButtons(panel[n],"AutoRoll_ItemButtonTemplate",0,0,nil,nil,0,-3);
-	setControl(panel[n],function() updateItemList(panel[n]); end);
+	panel[listName] = CreateFrame("ScrollFrame", listFrame, panel[borderName], "BasicHybridScrollFrameTemplate")
+	setPoints(panel[listName], {"TOPLEFT", 8, -7}, {"BOTTOMRIGHT", -28, 7})
+	setPoints(panel[listName].scrollBar, {"TOPLEFT", panel[listName], "TOPRIGHT", 0, -14}, {"BOTTOMLEFT", panel[listName], "BOTTOMRIGHT", 0, 13})
+	panel[listName].scrollBar.doNotHide = true
+	panel[listName].update = updateItemList
+	HybridScrollFrame_CreateButtons(panel[listName], "AutoRoll_ItemButtonTemplate", 0, 0, nil, nil, 0, -3)
+	setControl(panel[listName], function() updateItemList(panel[listName]) end)
 	
 	--- add new items
-	local n="InputNewItem";
-	panel[n] = CreateFrame("EditBox", nil, panel, "InputBoxTemplate");
-	panel[n]:SetSize(240, 26); panel[n]:SetAutoFocus(false);
-	panel[n].Label = panel[n]:CreateFontString(nil, "ARTWORK", "GameFontNormal");
-	panel[n].Label:SetPoint("BOTTOMLEFT", panel[n], "TOPLEFT");
-	panel[n].Label:SetText("Add new item:")
-	panel[n]:SetScript("OnTextChanged",function(self)
-		if strlen(self:GetText())>0 then
-			panel.checkInput=true;
-			panel.elapsed=0;
+	local inputName = "InputNewItem"
+	panel[inputName] = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
+	panel[inputName]:SetSize(240, 26)
+	panel[inputName]:SetAutoFocus(false)
+	panel[inputName].Label = panel[inputName]:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	panel[inputName].Label:SetPoint("BOTTOMLEFT", panel[inputName], "TOPLEFT")
+	panel[inputName].Label:SetText("Add new item:")
+	panel[inputName]:SetScript("OnTextChanged", function(self)
+		if strlen(self:GetText()) > 0 then
+			panel.checkInput = true
+			panel.elapsed = 0
 		else
-			panel.checkInput=false;
-			panel.elapsed=0;
-			panel.AddNewItem:Disable();
+			panel.checkInput = false
+			panel.elapsed = 0
+			panel.AddNewItem:Disable()
 		end
-	end);
-	panel[n]:SetScript("OnEnterPressed",addItem);
+	end)
+	panel[inputName]:SetScript("OnEnterPressed", addItem)
 	--- hook ChatFrame_OnHyperlinkShow(frame, link, text, button)
 
-	setTooltip(panel[n],
+	setTooltip(panel[inputName],
 		"Add new Item",
 		"Adding an item by its item id.",
-		{"Add an item by name is only possible for items in your bag.",1,1,0,1},
-		{"Press enter or push the Add-Button to add the item to the item list",0,.8,.95,1}
+		{"Add an item by name is only possible for items in your bag.", 1, 1, 0, 1},
+		{"Press enter or push the Add-Button to add the item to the item list", 0, 0.8, 0.95, 1}
 	)
-	setPoints(panel[n],{"TOPLEFT", panel.itemList, "BOTTOMLEFT", 20, -22});
-	setControl(panel[n],function() panel[n]:SetText(""); end);
+	setPoints(panel[inputName], {"TOPLEFT", panel.itemList, "BOTTOMLEFT", 20, -22})
+	setControl(panel[inputName], function() panel[inputName]:SetText("") end)
 
 	--- little helper to show if item name or id correct.
 	panel.ItemHelper = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge");
