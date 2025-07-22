@@ -152,12 +152,12 @@ local function checkInput(state)
 		itemTexture = "Interface\\ICONS\\inv_misc_questionmark";
 	end
 
-	if (itemId and (panel.changes.items[itemId]~=nil or AutoRollDB.items[itemId]~=nil)) then
+	if (itemId and (panel.changes.items[itemId] ~= nil or AutoRollDB.items[itemId] ~= nil)) then
 		itemName, itemId = "Item already in list.", nil
-	elseif (not itemId)then
-		if(objIsNumber and state=="OnUpdate")then
+	elseif (not itemId) then
+		if (objIsNumber and state == "OnUpdate") then
 			itemName, itemId = "...", nil;
-		elseif(objIsNumber and state=="OnEvent") or (not objIsNumber and state=="OnUpdate")then
+		elseif (objIsNumber and state == "OnEvent") or (not objIsNumber and state == "OnUpdate") then
 			itemName, itemId = "Couldn't find a valid item.", nil
 		end
 	end
@@ -198,22 +198,22 @@ panel:Hide();
 panel.name, panel.controls, panel.changes, panel.temp = addon, {}, {}, {};
 
 function panel:okay()
-	for i,v in pairs(panel.changes)do
-		if(i=="items")then
+	for i, v in pairs(panel.changes) do
+		if (i == "items") then
 			AutoRollDB.items = CopyTable(panel.changes.items);
 		else
 			AutoRollDB[i] = v;
-			if(i=="enabled")then
+			if (i == "enabled") then
 				ns.AddOnEnabled();
 			end
 		end
 	end
-	panel.changes={};
+	panel.changes = {};
 	ns.updateItemNames();
 end
 
 function panel:cancel()
-	panel.changes={};
+	panel.changes = {};
 end
 
 function panel:default()
@@ -222,36 +222,36 @@ function panel:default()
 end
 
 function panel:refresh(force)
-	if(force==true)then
+	if (force == true) then
 		wipe(itemIds);
 	end
-	for _,frame in pairs(panel.controls)do
-		if(type(frame.ctrl)=="function")then
+	for _, frame in pairs(panel.controls) do
+		if (type(frame.ctrl) == "function") then
 			frame.ctrl();
 		end
 	end
 end
 
 panel.checkInput = false;
-panel.elapsed=0;
-panel:SetScript("OnUpdate", function(self,elapse)
-	if(self.checkInput)then
+panel.elapsed = 0;
+panel:SetScript("OnUpdate", function(self, elapse)
+	if (self.checkInput) then
 		self.elapsed = self.elapsed + elapse;
-		if(self.elapsed>.76)then
-			self.checkInput=false;
+		if (self.elapsed > .76) then
+			self.checkInput = false;
 			checkInput("OnUpdate");
 		end
 	end
 end);
 
-panel:SetScript("OnEvent",function(self,event,...)
-	if(event=="GET_ITEM_INFO_RECEIVED")then
-		local id=...;
+panel:SetScript("OnEvent", function(self, event, ...)
+	if (event == "GET_ITEM_INFO_RECEIVED") then
+		local id = ...;
 		ns.debugPrint(
-			"Event: "..event,
-			"itemId: "..id
+			"Event: " .. event,
+			"itemId: " .. id
 		);
-		if(self.InputNewItem and self.InputNewItem:HasFocus())then
+		if (self.InputNewItem and self.InputNewItem:HasFocus()) then
 			checkInput("OnEvent");
 		end
 	end

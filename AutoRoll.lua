@@ -73,8 +73,8 @@ end
 
 function main:ADDON_LOADED(name)
 	if addon ~= name then
-        return
-    end
+		return
+	end
 
 	ns.print("|Cffffff00Addon loaded...|r")
 	AutoRollDB.version = version

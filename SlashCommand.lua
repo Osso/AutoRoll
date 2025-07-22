@@ -14,7 +14,7 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 	local cmd, arg = strsplit(" ", cmd_str:lower(), 2)
 
 	local itemId = tonumber(arg)
-    local itemName = nil
+	local itemName = nil
 
 	if itemId then
 		itemName = GetItemInfo(itemId)
