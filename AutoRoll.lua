@@ -19,7 +19,8 @@ ns.ModeLabels = {
 	[ROLL_PASS] = PASS,
 	[ROLL_DO_NOTHING] = "Do nothing"
 }
-ns.AutoRollDB = {
+-- Default database structure
+ns.AutoRollDB_defaults = {
 	enabled = true,
 	debugMode = false,
 	defaultRollMode = ROLL_GREED,
@@ -32,6 +33,18 @@ ns.AutoRollDB = {
 }
 ns.pendingItemInfo = nil
 
+-- Initialize saved variables
+if not AutoRollDB then
+	AutoRollDB = {}
+end
+
+-- Merge defaults with saved data
+for k, v in pairs(ns.AutoRollDB_defaults) do
+	if AutoRollDB[k] == nil then
+		AutoRollDB[k] = v
+	end
+end
+
 function ns.print(arg1, ...)
 	if arg1 == nil then
 		print(...)
@@ -41,7 +54,7 @@ function ns.print(arg1, ...)
 end
 
 function ns.debugPrint(...)
-	if not ns.AutoRollDB.debugMode then return end
+	if not AutoRollDB or not AutoRollDB.debugMode then return end
 	ns.print("(Debug Message)")
 	for i, v in ipairs({...}) do
 		print(v)
@@ -51,7 +64,8 @@ end
 local itemNames = {}
 local function updateItemNames()
 	wipe(itemNames)
-	for i, v in pairs(ns.AutoRollDB.items) do
+	if not AutoRollDB then return end
+	for i, v in pairs(AutoRollDB.items) do
 		local name = GetItemInfo(i)
 		if name then
 			itemNames[name] = v
@@ -63,23 +77,23 @@ ns.updateItemNames = updateItemNames
 local main = CreateFrame("Frame", "AutoRollFrame")
 
 function ns.AddOnEnabled()
-	if ns.AutoRollDB.enabled then
+	if AutoRollDB and AutoRollDB.enabled then
 		main:RegisterEvent("START_LOOT_ROLL")
 		updateItemNames()
 	else
 		main:UnregisterEvent("START_LOOT_ROLL")
 	end
-	ns.print("|cffffff00Addon", (ns.AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
+	ns.print("|cffffff00Addon", (AutoRollDB and AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
 end
 
 function main:ADDON_LOADED(name)
 	if addon ~= name then
 		return
 	end
-
+	
 	ns.print("|Cffffff00Addon loaded...|r")
-	ns.AutoRollDB.version = version
-	if ns.AutoRollDB.enabled then
+	AutoRollDB.version = version
+	if AutoRollDB.enabled then
 		ns.AddOnEnabled()
 	end
 end
@@ -96,7 +110,7 @@ function main:START_LOOT_ROLL(rollID)
 		return
 	end
 
-	local itemRollMode = itemNames[name] or ns.AutoRollDB.defaultRollMode -- use default roll mode when not in item list
+	local itemRollMode = itemNames[name] or AutoRollDB.defaultRollMode -- use default roll mode when not in item list
 	local actualRollMode = nil
 
 	-- Try to use the desired roll mode, fall back if not available
@@ -121,7 +135,7 @@ function main:START_LOOT_ROLL(rollID)
 	
 	if actualRollMode == nil then
 	-- Desired roll mode not available, use fallback
-		local fallbackMode = ns.AutoRollDB.fallbackRollMode
+		local fallbackMode = AutoRollDB.fallbackRollMode
 		if fallbackMode == ROLL_GREED and canGreed then
 			RollOnLoot(rollID, ROLL_GREED)
 			actualRollMode = ROLL_GREED

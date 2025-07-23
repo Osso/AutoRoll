@@ -64,7 +64,7 @@ local addon, ns = ...
 -- 				dropdown:SetupMenu(function(_, rootDescription)
 -- 					for rollType, label in pairs(ns.ModeLabels) do
 -- 						rootDescription:CreateButton(label, function()
--- 							ns.AutoRollDB.items[itemId] = rollType
+-- 							AutoRollDB.items[itemId] = rollType
 -- 							dropdown:SetText(label)
 -- 						end)
 -- 					end
@@ -74,7 +74,7 @@ local addon, ns = ...
 -- 		end
 -- 		
 -- 		-- Set current roll type
--- 		local currentRoll = ns.AutoRollDB.items[itemId] or 2
+-- 		local currentRoll = AutoRollDB.items[itemId] or 2
 -- 		button.dropdown:SetText(ns.ModeLabels[currentRoll] or "Greed")
 -- 		
 -- 		-- Create delete button
@@ -84,7 +84,7 @@ local addon, ns = ...
 -- 			button.deleteBtn:SetPoint("RIGHT", -5, 0)
 -- 		end
 -- 		button.deleteBtn:SetScript("OnClick", function()
--- 			ns.AutoRollDB.items[itemId] = nil
+-- 			AutoRollDB.items[itemId] = nil
 -- 			UpdateItemList()
 -- 		end)
 -- 		
@@ -105,7 +105,7 @@ local addon, ns = ...
 -- 	if not itemListFrame then return end
 -- 	
 -- 	local dataProvider = CreateDataProvider()
--- 	for itemId in pairs(ns.AutoRollDB.items) do
+-- 	for itemId in pairs(AutoRollDB.items) do
 -- 		dataProvider:Insert(itemId)
 -- 	end
 -- 	itemListFrame.scrollBox:SetDataProvider(dataProvider)
@@ -147,7 +147,7 @@ local addon, ns = ...
 -- 			local itemID = tonumber(text)
 -- 			if itemID then
 -- 				-- Direct item ID input
--- 				if not ns.AutoRollDB.items[itemID] then
+-- 				if not AutoRollDB.items[itemID] then
 -- 					addButton:Enable()
 -- 					return itemID
 -- 				else
@@ -160,7 +160,7 @@ local addon, ns = ...
 -- 				if itemLink then
 -- 					itemID = itemLink:match("item:(%d+)")
 -- 					itemID = tonumber(itemID)
--- 					if itemID and not ns.AutoRollDB.items[itemID] then
+-- 					if itemID and not AutoRollDB.items[itemID] then
 -- 						addButton:Enable()
 -- 						return itemID
 -- 					else
@@ -188,7 +188,7 @@ local addon, ns = ...
 -- 	local function AddItem()
 -- 		local itemID = ValidateInput()
 -- 		if itemID then
--- 			ns.AutoRollDB.items[itemID] = 2 -- Default to Greed
+-- 			AutoRollDB.items[itemID] = 2 -- Default to Greed
 -- 			editBox:SetText("")
 -- 			UpdateItemList()
 -- 			addButton:Disable()
@@ -221,7 +221,7 @@ end
 -- 		local tooltip = "Enable/Disable automatic rolling on all items. Uses item list settings when available, otherwise rolls greed."
 -- 		local defaultValue = true
 -- 			
--- 		local setting = Settings.RegisterAddOnSetting(category, addon.."_"..variableKey, variableKey, ns.AutoRollDB, type(defaultValue), description, defaultValue)
+-- 		local setting = Settings.RegisterAddOnSetting(category, addon.."_"..variableKey, variableKey, AutoRollDB, type(defaultValue), description, defaultValue)
 -- 		Settings.CreateCheckbox(category, setting, tooltip)
 -- 		setting:SetValueChangedCallback(OnSettingEnabled)
 -- 	end
@@ -232,7 +232,7 @@ end
 -- 		local tooltip = "Enable/Disable debug messages in chat window."
 -- 		local defaultValue = false
 -- 			
--- 		local setting = Settings.RegisterAddOnSetting(category, addon.."_"..variableKey, variableKey, ns.AutoRollDB, type(defaultValue), description, defaultValue)
+-- 		local setting = Settings.RegisterAddOnSetting(category, addon.."_"..variableKey, variableKey, AutoRollDB, type(defaultValue), description, defaultValue)
 -- 		Settings.CreateCheckbox(category, setting, tooltip)
 -- 		setting:SetValueChangedCallback(OnSettingDebugMode)
 -- 	end
@@ -279,7 +279,7 @@ local function initBasicSettings()
 		local variableKey = "enabled"
 		local name = "Enable AutoRoll"
 		local tooltip = "Enables the auto roll functionality"
-		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, ns.AutoRollDB, type(ns.AutoRollDB[variableKey]), name, ns.AutoRollDB[variableKey])
+		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, AutoRollDB, type(AutoRollDB[variableKey]), name, ns.AutoRollDB_defaults[variableKey])
 		Settings.CreateCheckbox(category, setting, tooltip)
 		setting:SetValueChangedCallback(OnSettingEnabled)
 	end
@@ -288,7 +288,7 @@ local function initBasicSettings()
 		local variableKey = "debugMode"
 		local name = "Debug Mode"
 		local tooltip = "Enable debug mode for troubleshooting"
-		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, ns.AutoRollDB, type(ns.AutoRollDB[variableKey]), name, ns.AutoRollDB[variableKey])
+		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, AutoRollDB, type(AutoRollDB[variableKey]), name, ns.AutoRollDB_defaults[variableKey])
 		Settings.CreateCheckbox(category, setting, tooltip)
 		setting:SetValueChangedCallback(OnSettingDebugMode)
 	end
@@ -297,7 +297,7 @@ local function initBasicSettings()
 		local variableKey = "defaultRollMode"
 		local name = "Default Roll Mode"
 		local tooltip = "The default roll mode for items not in the item list"
-		local defaultValue = 2 -- ROLL_GREED
+		local defaultValue = ns.AutoRollDB_defaults.defaultRollMode
 		
 		local function GetOptions()
 			local container = Settings.CreateControlTextContainer()
@@ -310,7 +310,7 @@ local function initBasicSettings()
 			return container:GetData()
 		end
 		
-		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, ns.AutoRollDB, type(defaultValue), name, defaultValue)
+		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, AutoRollDB, type(defaultValue), name, defaultValue)
 		Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	end
 
@@ -318,7 +318,7 @@ local function initBasicSettings()
 		local variableKey = "fallbackRollMode"
 		local name = "Fallback Roll Mode"
 		local tooltip = "The roll mode to use when the default roll mode is not available"
-		local defaultValue = 5 -- ROLL_DO_NOTHING
+		local defaultValue = ns.AutoRollDB_defaults.fallbackRollMode
 		
 		local function GetOptions()
 			local container = Settings.CreateControlTextContainer()
@@ -328,7 +328,7 @@ local function initBasicSettings()
 			return container:GetData()
 		end
 		
-		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, ns.AutoRollDB, type(defaultValue), name, defaultValue)
+		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, AutoRollDB, type(defaultValue), name, defaultValue)
 		Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	end
 

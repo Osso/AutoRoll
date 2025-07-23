@@ -99,10 +99,14 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 		end
 
 	elseif cmd == "reset" then
-		AutoRollDB = ns.AutoRollDB_defaults
+		-- Reset only the items list to defaults
+		AutoRollDB.items = {
+			[120945] = 2, -- Primal Spirit - Greed
+			[116920] = 5, -- True steel lockbox - Do nothing
+		}
 		ns.updateItemNames()
 		if AutoRollPanel and AutoRollPanel:IsShown() then AutoRollPanel:refresh() end
-		ns.print("Item list resetted...")
+		ns.print("Item list reset to defaults")
 	end
 
 	if AutoRollPanel and AutoRollPanel:IsShown() then AutoRollPanel:refresh(true) end
