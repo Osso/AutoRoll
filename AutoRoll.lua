@@ -12,13 +12,29 @@ local ROLL_DO_NOTHING = 5  -- Internal only - don't roll at all
 
 -- ModeLabels indexed by our roll constants (0-based indexing won't work for Lua tables, so we adjust)
 ns.ModeLabels = {
-	[ROLL_GREED] = GREED,
-	[ROLL_NEED] = NEED,
-	[ROLL_DISENCHANT] = ROLL_DISENCHANT,
-	[ROLL_TRANSMOG] = ROLL_TRANSMOG,
-	[ROLL_PASS] = PASS,
+	[ROLL_GREED] = "Greed",
+	[ROLL_NEED] = "Need",
+	[ROLL_DISENCHANT] = "Disenchant",
+	[ROLL_TRANSMOG] = "Transmog",
+	[ROLL_PASS] = "Pass",
 	[ROLL_DO_NOTHING] = "Do nothing"
 }
+-- Raid instance IDs for raids with loot rolls (Shadowlands, Dragonflight, The War Within)
+ns.RaidInstances = {
+	-- Shadowlands
+	[13224] = "Castle Nathria",
+	[13561] = "Sanctum of Domination",
+	[13742] = "Sepulcher of the First Ones",
+	-- Dragonflight
+	[14030] = "Vault of the Incarnates",
+	[14663] = "Aberrus, the Shadowed Crucible",
+	[14643] = "Amirdrassil, the Dream's Hope",
+	-- The War Within
+	[14980] = "Nerub-ar Palace",
+	[15522] = "Liberation of Undermine",
+	[99999] = "Manaforge: Omega" -- Placeholder ID, update when available
+}
+
 -- Default database structure
 ns.AutoRollDB_defaults = {
 	enabled = true,
@@ -26,6 +42,20 @@ ns.AutoRollDB_defaults = {
 	defaultRollMode = ROLL_GREED,
 	fallbackRollMode = ROLL_DO_NOTHING,
 	version = 1,
+	raidSettings = {
+		-- Shadowlands
+		[13224] = true, -- Castle Nathria
+		[13561] = true, -- Sanctum of Domination
+		[13742] = true, -- Sepulcher of the First Ones
+		-- Dragonflight
+		[14030] = true, -- Vault of the Incarnates
+		[14663] = true, -- Aberrus, the Shadowed Crucible
+		[14643] = true, -- Amirdrassil, the Dream's Hope
+		-- The War Within
+		[14980] = false, -- Nerub-ar Palace
+		[15522] = false, -- Liberation of Undermine
+		[99999] = false  -- Manaforge: Omega (placeholder)
+	},
 	items = {
 		[120945] = ROLL_GREED, -- Primal Spirit
 		[116920] = ROLL_DO_NOTHING, -- True steel lockbox
@@ -74,6 +104,27 @@ local function updateItemNames()
 end
 ns.updateItemNames = updateItemNames
 
+-- Check if we're currently in a supported raid
+local function isInSupportedRaid()
+	local instanceName, instanceType, _, _, _, _, _, instanceID = GetInstanceInfo()
+	
+	-- Check if we're in a raid instance
+	if instanceType ~= "raid" then
+		return false, nil
+	end
+	
+	-- Check if this raid is in our supported list
+	if ns.RaidInstances[instanceID] then
+		-- Check if this raid is enabled in settings
+		if AutoRollDB.raidSettings and AutoRollDB.raidSettings[instanceID] then
+			return true, instanceID, instanceName
+		end
+	end
+	
+	return false, nil
+end
+ns.isInSupportedRaid = isInSupportedRaid
+
 local main = CreateFrame("Frame", "AutoRollFrame")
 
 function ns.AddOnEnabled()
@@ -99,6 +150,13 @@ function main:ADDON_LOADED(name)
 end
 
 function main:START_LOOT_ROLL(rollID)
+	-- Check if we're in a supported raid first
+	local inRaid, raidID, raidName = isInSupportedRaid()
+	if not inRaid then
+		ns.debugPrint("Not in a supported raid or raid is disabled, skipping roll")
+		return
+	end
+	
 	local _, name, _, _, _, canNeed, canGreed, canDisenchant, _, _, _, _, canTransmog = GetLootRollItemInfo(rollID)
 
 	if not rollID or not name then
@@ -109,6 +167,8 @@ function main:START_LOOT_ROLL(rollID)
 		)
 		return
 	end
+	
+	ns.debugPrint("Rolling in raid:", raidName, "(ID:", raidID, ")")
 
 	local itemRollMode = itemNames[name] or AutoRollDB.defaultRollMode -- use default roll mode when not in item list
 	local actualRollMode = nil

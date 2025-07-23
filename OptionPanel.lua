@@ -273,7 +273,7 @@ end
 
 -- TEMPORARY: Use basic settings registration until vertical layout is fixed
 local function initBasicSettings()
-	local category = Settings.RegisterVerticalLayoutCategory(addon)
+	local category, layout = Settings.RegisterVerticalLayoutCategory(addon)
 	
 	do
 		local variableKey = "enabled"
@@ -330,6 +330,83 @@ local function initBasicSettings()
 		
 		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, AutoRollDB, type(defaultValue), name, defaultValue)
 		Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+	end
+
+	-- Add raid settings sections by expansion
+	do
+		-- Ensure raidSettings table exists
+		if not AutoRollDB.raidSettings then
+			AutoRollDB.raidSettings = {}
+		end
+		
+		-- Shadowlands raids
+		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Shadowlands Raids"))
+		
+		local shadowlandsRaids = {
+			{13224, "Castle Nathria"},
+			{13561, "Sanctum of Domination"},
+			{13742, "Sepulcher of the First Ones"}
+		}
+		
+		for _, raidData in ipairs(shadowlandsRaids) do
+			local instanceID, raidName = raidData[1], raidData[2]
+			local variableKey = instanceID
+			local tooltip = "Enable AutoRoll in " .. raidName
+			
+			-- Set default value if not exists
+			if AutoRollDB.raidSettings[instanceID] == nil then
+				AutoRollDB.raidSettings[instanceID] = ns.AutoRollDB_defaults.raidSettings[instanceID]
+			end
+			
+			local setting = Settings.RegisterAddOnSetting(category, "raid_" .. instanceID, variableKey, AutoRollDB.raidSettings, type(true), raidName, true)
+			Settings.CreateCheckbox(category, setting, tooltip)
+		end
+		
+		-- Dragonflight raids
+		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Dragonflight Raids"))
+		
+		local dragonflightRaids = {
+			{14030, "Vault of the Incarnates"},
+			{14663, "Aberrus, the Shadowed Crucible"},
+			{14643, "Amirdrassil, the Dream's Hope"}
+		}
+		
+		for _, raidData in ipairs(dragonflightRaids) do
+			local instanceID, raidName = raidData[1], raidData[2]
+			local variableKey = instanceID
+			local tooltip = "Enable AutoRoll in " .. raidName
+			
+			-- Set default value if not exists
+			if AutoRollDB.raidSettings[instanceID] == nil then
+				AutoRollDB.raidSettings[instanceID] = ns.AutoRollDB_defaults.raidSettings[instanceID]
+			end
+			
+			local setting = Settings.RegisterAddOnSetting(category, "raid_" .. instanceID, variableKey, AutoRollDB.raidSettings, type(true), raidName, true)
+			Settings.CreateCheckbox(category, setting, tooltip)
+		end
+		
+		-- The War Within raids
+		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("The War Within Raids"))
+		
+		local twwRaids = {
+			{14980, "Nerub-ar Palace"},
+			{15522, "Liberation of Undermine"},
+			{99999, "Manaforge: Omega"}
+		}
+		
+		for _, raidData in ipairs(twwRaids) do
+			local instanceID, raidName = raidData[1], raidData[2]
+			local variableKey = instanceID
+			local tooltip = "Enable AutoRoll in " .. raidName
+			
+			-- Set default value if not exists
+			if AutoRollDB.raidSettings[instanceID] == nil then
+				AutoRollDB.raidSettings[instanceID] = ns.AutoRollDB_defaults.raidSettings[instanceID]
+			end
+			
+			local setting = Settings.RegisterAddOnSetting(category, "raid_" .. instanceID, variableKey, AutoRollDB.raidSettings, type(true), raidName, true)
+			Settings.CreateCheckbox(category, setting, tooltip)
+		end
 	end
 
 	Settings.RegisterAddOnCategory(category)

@@ -34,6 +34,7 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 		ns.print("Chat command list for /autoroll")
 		ns.print(nil, "toggle - enable/disable AutoRoll on all items", status(AutoRollDB.enabled))
 		ns.print(nil, "debug - enable/disable debug messages in chat window", status(AutoRollDB.debugMode))
+		ns.print(nil, "raid - show current raid status and enabled raids")
 		ns.print(nil, "list - list items")
 		ns.print(nil, "add <itemId> - add an item to the item list")
 		ns.print(nil, "del <itemId> - delete an item from the item list")
@@ -46,6 +47,27 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 
 	elseif cmd == "debug" then
 		toggle("DebugMode", "debugMode")
+
+	elseif cmd == "raid" then
+		-- Show current raid status
+		local inRaid, raidID, raidName = ns.isInSupportedRaid()
+		if inRaid then
+			ns.print("Currently in raid: " .. raidName .. " (AutoRoll enabled)")
+		else
+			local instanceName, instanceType = GetInstanceInfo()
+			if instanceType == "raid" then
+				ns.print("Currently in raid: " .. instanceName .. " (AutoRoll disabled - not a supported raid)")
+			else
+				ns.print("Not currently in a raid")
+			end
+		end
+		
+		-- List enabled raids
+		ns.print("\nEnabled raids:")
+		for instanceID, raidName in pairs(ns.RaidInstances) do
+			local enabled = AutoRollDB.raidSettings and AutoRollDB.raidSettings[instanceID]
+			ns.print(nil, raidName .. ":", enabled and "|cff00ff00enabled|r" or "|cffff0000disabled|r")
+		end
 
 	elseif cmd == "list" then
 		local requesting
