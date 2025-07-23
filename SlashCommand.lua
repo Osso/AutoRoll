@@ -13,33 +13,13 @@ end
 SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 	local cmd, arg = strsplit(" ", cmd_str:lower(), 2)
 
-	local itemId = tonumber(arg)
-	local itemName = nil
-
-	if itemId then
-		itemName = GetItemInfo(itemId)
-		if not itemName and internal ~= true then
-			ns.pendingItemInfo = {"sc", cmd_str, itemId}
-			C_Timer.After(3, function()
-				if ns.pendingItemInfo and ns.pendingItemInfo[3] == itemId then
-					ns.pendingItemInfo = nil
-					ns.print(("Sorry, could not get information for item id %d. Please check the item id."):format(itemId))
-				end
-			end)
-			return
-		end
-	end
-
 	if cmd == "" then
 		ns.print("Chat command list for /autoroll")
 		ns.print(nil, "toggle - enable/disable AutoRoll on all items", status(AutoRollDB.enabled))
 		ns.print(nil, "debug - enable/disable debug messages in chat window", status(AutoRollDB.debugMode))
 		ns.print(nil, "raid - show current raid status and enabled raids")
-		ns.print(nil, "list - list items")
-		ns.print(nil, "add <itemId> - add an item to the item list")
-		ns.print(nil, "del <itemId> - delete an item from the item list")
-		ns.print(nil, "mode <itemId> - change need/greed/disenchant/pass/do nothing mode for a single item")
-		ns.print(nil, "reset - reset the item list to default")
+		ns.print(nil, "dump - show AutoRollDB contents for debugging")
+		ns.print(nil, "reset - reset AutoRollDB to defaults")
 
 	elseif cmd == "toggle" then
 		toggle("AutoRoll on all items", "enabled")
@@ -61,77 +41,60 @@ SlashCmdList["AUTOROLL"] = function(cmd_str, internal)
 				ns.print("Not currently in a raid")
 			end
 		end
-		
-		-- List enabled raids
-		ns.print("\nEnabled raids:")
-		for instanceID, raidName in pairs(ns.RaidInstances) do
-			local enabled = AutoRollDB.raidSettings and AutoRollDB.raidSettings[instanceID]
-			ns.print(nil, raidName .. ":", enabled and "|cff00ff00enabled|r" or "|cffff0000disabled|r")
-		end
 
-	elseif cmd == "list" then
-		local requesting
-		-- first run, request item data if not cached
-		for i, v in pairs(AutoRollDB.items) do
-			if not GetItemInfo(i) then requesting = true end
-		end
-
-		if requesting then
-			C_Timer.After(1.2, function() SlashCmdList["AUTOROLL"](cmd_str) end)
-			return
-		end
-
-		-- second run, print item list
-		ns.print("Current item list")
-		for i, v in pairs(AutoRollDB.items) do
-			local name = GetItemInfo(i)
-			print(("Id: %d (%s), Mode: %s"):format(i, name, ns.ModeLabels[v] or "?"))
-		end
-
-	elseif cmd == "add" then
-		if ns.pendingItemInfo then
-			ns.print("Sorry, that is too fast. This addon request the item name and waiting on answer " ..
-				"from blizzards item database.")
-		elseif itemId ~= nil and itemId > 0 and not AutoRollDB.items[itemId] then
-			AutoRollDB.items[itemId] = 1
-			ns.updateItemNames()
-			ns.print(("ItemID %d found... %s added to AutoRoll's item list. Mode: %s"):format(itemId, itemName, GREED))
-		else
-			ns.print(("ItemID %d unknown/invalid... please check the given numbers."):format(itemId))
-		end
-
-	elseif cmd == "del" then
-		if itemId ~= nil and AutoRollDB.items[itemId] then
-			AutoRollDB.items[itemId] = nil
-			ns.updateItemNames()
-			ns.print(("ItemID %d (%s) removed from AutoRoll's item list"):format(itemId, itemName))
-		else
-			ns.print(("Id %d not found in item list."):format(itemId))
-		end
-
-	elseif cmd == "mode" then
-		if itemId and itemId > 0 and AutoRollDB.items[itemId] then
-			AutoRollDB.items[itemId] = AutoRollDB.items[itemId] == #ns.ModeLabels and 1 or AutoRollDB.items[itemId] + 1
-			if AutoRollPanel and AutoRollPanel:IsShown() then
-				AutoRollPanel.changes.items[itemId] = AutoRollDB.items[itemId]
+	elseif cmd == "dump" then
+		ns.print("AutoRollDB contents:")
+		for k, v in pairs(AutoRollDB) do
+			if type(v) == "table" then
+				ns.print(k .. ":")
+				for k2, v2 in pairs(v) do
+					ns.print("  " .. tostring(k2) .. ": " .. tostring(v2))
+				end
+			else
+				ns.print(k .. ": " .. tostring(v))
 			end
-			ns.print(("Changed mode for itemId %d (%s) to %s"):format(itemId, itemName, ns.ModeLabels[AutoRollDB.items[itemId]]))
-		else
-			ns.print(("ItemId %d not found in item list."):format(itemId))
 		end
 
 	elseif cmd == "reset" then
-		-- Reset only the items list to defaults
-		AutoRollDB.items = {
-			[120945] = 2, -- Primal Spirit - Greed
-			[116920] = 5, -- True steel lockbox - Do nothing
-		}
-		ns.updateItemNames()
-		if AutoRollPanel and AutoRollPanel:IsShown() then AutoRollPanel:refresh() end
-		ns.print("Item list reset to defaults")
-	end
+		ns.print("Resetting AutoRollDB to defaults...")
+		-- Clear existing data
+		for k in pairs(AutoRollDB) do
+			ns.print("DEBUG: Clearing " .. k)
+			AutoRollDB[k] = nil
+		end
+		-- Reinitialize with defaults
+		for k, v in pairs(ns.AutoRollDB_defaults) do
+			ns.print("DEBUG: Setting " .. k .. " (type: " .. type(v) .. ")")
+			if type(v) == "table" then
+				AutoRollDB[k] = {}
+				local count = 0
+				for k2, v2 in pairs(v) do
+					AutoRollDB[k][k2] = v2
+					count = count + 1
+					if k == "raidSettings" then
+						ns.print("DEBUG: Set raidSettings[" .. k2 .. "] = " .. tostring(v2))
+					end
+				end
+				ns.print("DEBUG: Created table " .. k .. " with " .. count .. " entries")
+			else
+				AutoRollDB[k] = v
+				ns.print("DEBUG: Set " .. k .. " = " .. tostring(v))
+			end
+		end
+		ns.print("AutoRollDB reset to defaults")
+		-- Show final raidSettings
+		if AutoRollDB.raidSettings then
+			ns.print("DEBUG: Final raidSettings has " .. #AutoRollDB.raidSettings .. " entries")
+			for k, v in pairs(AutoRollDB.raidSettings) do
+				ns.print("DEBUG: raidSettings[" .. k .. "] = " .. tostring(v))
+			end
+		else
+			ns.print("DEBUG: ERROR - raidSettings is nil after reset!")
+		end
 
-	if AutoRollPanel and AutoRollPanel:IsShown() then AutoRollPanel:refresh(true) end
+	else
+		ns.print("Unknown command: " .. cmd)
+	end
 end
 
 SLASH_AUTOROLL1 = "/autoroll"

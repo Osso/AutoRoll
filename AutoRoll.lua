@@ -56,10 +56,6 @@ ns.AutoRollDB_defaults = {
 		[15522] = false, -- Liberation of Undermine
 		[99999] = false  -- Manaforge: Omega (placeholder)
 	},
-	items = {
-		[120945] = ROLL_GREED, -- Primal Spirit
-		[116920] = ROLL_DO_NOTHING, -- True steel lockbox
-	}
 }
 ns.pendingItemInfo = nil
 
@@ -71,7 +67,24 @@ end
 -- Merge defaults with saved data
 for k, v in pairs(ns.AutoRollDB_defaults) do
 	if AutoRollDB[k] == nil then
-		AutoRollDB[k] = v
+		if type(v) == "table" then
+			-- Deep copy for nested tables
+			AutoRollDB[k] = {}
+			for k2, v2 in pairs(v) do
+				AutoRollDB[k][k2] = v2
+			end
+		else
+			AutoRollDB[k] = v
+		end
+	else
+		-- For existing tables, merge missing keys
+		if type(v) == "table" and type(AutoRollDB[k]) == "table" then
+			for k2, v2 in pairs(v) do
+				if AutoRollDB[k][k2] == nil then
+					AutoRollDB[k][k2] = v2
+				end
+			end
+		end
 	end
 end
 
@@ -84,25 +97,17 @@ function ns.print(arg1, ...)
 end
 
 function ns.debugPrint(...)
-	if not AutoRollDB or not AutoRollDB.debugMode then return end
+	if not AutoRollDB or not AutoRollDB.debugMode then
+		return
+	end
+	
 	ns.print("(Debug Message)")
 	for i, v in ipairs({...}) do
 		print(v)
 	end
 end
 
-local itemNames = {}
-local function updateItemNames()
-	wipe(itemNames)
-	if not AutoRollDB then return end
-	for i, v in pairs(AutoRollDB.items) do
-		local name = GetItemInfo(i)
-		if name then
-			itemNames[name] = v
-		end
-	end
-end
-ns.updateItemNames = updateItemNames
+-- Removed item-specific roll handling
 
 -- Check if we're currently in a supported raid
 local function isInSupportedRaid()
@@ -130,7 +135,6 @@ local main = CreateFrame("Frame", "AutoRollFrame")
 function ns.AddOnEnabled()
 	if AutoRollDB and AutoRollDB.enabled then
 		main:RegisterEvent("START_LOOT_ROLL")
-		updateItemNames()
 	else
 		main:UnregisterEvent("START_LOOT_ROLL")
 	end
@@ -141,9 +145,10 @@ function main:ADDON_LOADED(name)
 	if addon ~= name then
 		return
 	end
-	
-	ns.print("|Cffffff00Addon loaded...|r")
+
 	AutoRollDB.version = version
+	ns.initSettingsPanel()
+	ns.print("|Cffffff00Addon loaded...|r")
 	if AutoRollDB.enabled then
 		ns.AddOnEnabled()
 	end
@@ -170,7 +175,7 @@ function main:START_LOOT_ROLL(rollID)
 	
 	ns.debugPrint("Rolling in raid:", raidName, "(ID:", raidID, ")")
 
-	local itemRollMode = itemNames[name] or AutoRollDB.defaultRollMode -- use default roll mode when not in item list
+	local itemRollMode = AutoRollDB.defaultRollMode
 	local actualRollMode = nil
 
 	-- Try to use the desired roll mode, fall back if not available
@@ -220,21 +225,5 @@ function main:START_LOOT_ROLL(rollID)
 end
 
 
-function main:GET_ITEM_INFO_RECEIVED(itemId)
-	if ns.pendingItemInfo then
-		local source, originalCommand, expectedItemId = unpack(ns.pendingItemInfo)
-		ns.pendingItemInfo = nil
-		if source == "sc" and itemId == expectedItemId then
-			ns.debugPrint(
-				"Event: GET_ITEM_INFO_RECEIVED",
-				"itemID: " .. itemId,
-				"GetItemInfo" .. table.concat({GetItemInfo(itemId)}, ", ")
-			)
-			SlashCmdList["AUTOROLL"](originalCommand, true)
-		end
-	end
-end
-
 main:SetScript("OnEvent", function(self, event, ...) if main[event] then main[event](self, ...) end end)
 main:RegisterEvent("ADDON_LOADED")
-main:RegisterEvent("GET_ITEM_INFO_RECEIVED")
