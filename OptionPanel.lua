@@ -1,197 +1,206 @@
 
 local addon, ns = ...
 
--- local changes
+-- COMMENTED OUT: New vertical layout code - not working yet
+-- TODO: Fix the vertical layout implementation
 
--- local itemIds = {}
--- local function updateItemList(self)
--- 	local offset = HybridScrollFrame_GetOffset(self)
+-- local itemListFrame = nil
 
--- 	if not changes.items then
--- 		changes.items = CopyTable(ns.AutoRollDB.items)
--- 		wipe(itemIds)
--- 	end
--- 	if #itemIds == 0 then
--- 		for i, v in pairs(changes.items) do
--- 			if v ~= nil then
--- 				table.insert(itemIds, i)
--- 			end
+-- -- Creates the scrollable item list frame using the new WoW 10.0+ ScrollBox API
+-- local function CreateItemListFrame()
+-- 	-- Main container frame
+-- 	local frame = CreateFrame("Frame")
+-- 	frame:SetSize(500, 300)
+-- 	
+-- 	-- Modern ScrollBox replaces the old ScrollFrame system
+-- 	local scrollBox = CreateFrame("Frame", nil, frame, "WowScrollBoxList")
+-- 	scrollBox:SetPoint("TOPLEFT", 10, -10)
+-- 	scrollBox:SetPoint("BOTTOMRIGHT", -30, 50)
+-- 	
+-- 	-- Scrollbar for the ScrollBox
+-- 	local scrollBar = CreateFrame("EventFrame", nil, frame, "MinimalScrollBar")
+-- 	scrollBar:SetPoint("TOPLEFT", scrollBox, "TOPRIGHT", 8, 0)
+-- 	scrollBar:SetPoint("BOTTOMLEFT", scrollBox, "BOTTOMRIGHT", 8, 0)
+-- 	
+-- 	-- Linear view handles the layout of list items
+-- 	local view = CreateScrollBoxListLinearView()
+-- 	-- Initialize each button element with item data
+-- 	view:SetElementInitializer("Button", function(button, itemId)
+-- 		local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(itemId)
+-- 		if not itemName then
+-- 			itemName = "Item ID: " .. itemId
 -- 		end
--- 		table.sort(itemIds, function(a, b) return a > b end)
--- 	end
--- 	local nItems, items = #itemIds, changes.items
-
--- 	for i = 1, #self.buttons do
--- 		local index = offset + i
--- 		local button = self.buttons[i]
-
--- 		if itemIds[index] then
--- 			local Id = itemIds[index]
--- 			local Name, _, _, _, _, _, _, _, _, Texture = GetItemInfo(Id)
-
--- 			button.ItemID:SetText(Id)
--- 			button.ItemIcon:SetTexture(Texture)
--- 			button.ItemName:SetText(Name)
--- 			button.ItemName:SetPoint("RIGHT", button.Mode, "LEFT", -10, 0) -- limit width of font string
-
--- 			button.Mode.index = Id
--- 			button.Mode.value = items[Id]
-
--- 			UIDropDownMenu_SetWidth(button.Mode, 94)
--- 			UIDropDownMenu_Initialize(button.Mode, function()
--- 				for v, t in pairs(ns.ModeLabels) do
--- 					local info = UIDropDownMenu_CreateInfo()
--- 					info.value = v
--- 					info.text = t
--- 					info.arg1 = button.Mode
--- 					info.arg2 = v
--- 					info.func = function(dropdownSelf, frame, value)
--- 						UIDropDownMenu_SetSelectedValue(frame, value)
--- 						changes.items[button.Mode.index] = value
--- 						button.Mode.value = value
+-- 		if not itemTexture then
+-- 			itemTexture = "Interface\\ICONS\\inv_misc_questionmark"
+-- 		end
+-- 		
+-- 		button:SetSize(470, 32)
+-- 		
+-- 		-- Create icon texture if it doesn't exist
+-- 		if not button.icon then
+-- 			button.icon = button:CreateTexture(nil, "ARTWORK")
+-- 			button.icon:SetSize(24, 24)
+-- 			button.icon:SetPoint("LEFT", 5, 0)
+-- 		end
+-- 		button.icon:SetTexture(itemTexture)
+-- 		
+-- 		-- Create item name text if it doesn't exist
+-- 		if not button.nameText then
+-- 			button.nameText = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+-- 			button.nameText:SetPoint("LEFT", button.icon, "RIGHT", 8, 0)
+-- 			button.nameText:SetPoint("RIGHT", -200, 0)
+-- 			button.nameText:SetJustifyH("LEFT")
+-- 		end
+-- 		button.nameText:SetText(itemName)
+-- 		
+-- 		-- Create dropdown for roll type selection
+-- 		if not button.dropdown then
+-- 			button.dropdown = CreateFrame("DropdownButton", nil, button, "WowStyle1DropdownTemplate")
+-- 			button.dropdown:SetPoint("RIGHT", -40, 0)
+-- 			button.dropdown:SetWidth(120)
+-- 			
+-- 			local function SetupDropdown()
+-- 				local dropdown = button.dropdown
+-- 				dropdown:SetupMenu(function(_, rootDescription)
+-- 					for rollType, label in pairs(ns.ModeLabels) do
+-- 						rootDescription:CreateButton(label, function()
+-- 							ns.AutoRollDB.items[itemId] = rollType
+-- 							dropdown:SetText(label)
+-- 						end)
 -- 					end
--- 					UIDropDownMenu_AddButton(info)
+-- 				end)
+-- 			end
+-- 			SetupDropdown()
+-- 		end
+-- 		
+-- 		-- Set current roll type
+-- 		local currentRoll = ns.AutoRollDB.items[itemId] or 2
+-- 		button.dropdown:SetText(ns.ModeLabels[currentRoll] or "Greed")
+-- 		
+-- 		-- Create delete button
+-- 		if not button.deleteBtn then
+-- 			button.deleteBtn = CreateFrame("Button", nil, button, "UIPanelCloseButton")
+-- 			button.deleteBtn:SetSize(20, 20)
+-- 			button.deleteBtn:SetPoint("RIGHT", -5, 0)
+-- 		end
+-- 		button.deleteBtn:SetScript("OnClick", function()
+-- 			ns.AutoRollDB.items[itemId] = nil
+-- 			UpdateItemList()
+-- 		end)
+-- 		
+-- 		-- Style the button
+-- 		button:SetNormalTexture(nil)
+-- 		button:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+-- 	end)
+-- 	
+-- 	-- Initialize the scroll system
+-- 	ScrollUtil.InitScrollBoxListWithScrollBar(scrollBox, scrollBar, view)
+-- 	
+-- 	frame.scrollBox = scrollBox
+-- 	return frame
+-- end
+
+-- -- Updates the item list with current data
+-- function UpdateItemList()
+-- 	if not itemListFrame then return end
+-- 	
+-- 	local dataProvider = CreateDataProvider()
+-- 	for itemId in pairs(ns.AutoRollDB.items) do
+-- 		dataProvider:Insert(itemId)
+-- 	end
+-- 	itemListFrame.scrollBox:SetDataProvider(dataProvider)
+-- end
+
+-- -- Creates the add item interface
+-- local function CreateAddItemFrame()
+-- 	local frame = CreateFrame("Frame")
+-- 	frame:SetSize(500, 80)
+-- 	
+-- 	-- Label for the input
+-- 	local label = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+-- 	label:SetPoint("TOPLEFT", 10, -10)
+-- 	label:SetText("Add new item (by Item ID or name):")
+-- 	
+-- 	-- Input field for item ID or name
+-- 	local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+-- 	editBox:SetSize(300, 32)
+-- 	editBox:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, -5)
+-- 	editBox:SetAutoFocus(false)
+-- 	
+-- 	-- Add button
+-- 	local addButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+-- 	addButton:SetSize(80, 25)
+-- 	addButton:SetPoint("LEFT", editBox, "RIGHT", 10, 0)
+-- 	addButton:SetText("Add")
+-- 	addButton:Disable()
+-- 	
+-- 	-- Help text showing validation status
+-- 	local helpText = frame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+-- 	helpText:SetPoint("TOPLEFT", editBox, "BOTTOMLEFT", 0, -5)
+-- 	helpText:SetText("Enter item ID or item name/link")
+-- 	helpText:SetTextColor(0.7, 0.7, 0.7)
+-- 	
+-- 	-- Validates user input and enables/disables add button
+-- 	local function ValidateInput()
+-- 		local text = editBox:GetText()
+-- 		if text and text ~= "" then
+-- 			local itemID = tonumber(text)
+-- 			if itemID then
+-- 				-- Direct item ID input
+-- 				if not ns.AutoRollDB.items[itemID] then
+-- 					addButton:Enable()
+-- 					return itemID
+-- 				else
+-- 					helpText:SetText("Item already in list")
+-- 					helpText:SetTextColor(1, 0.5, 0.5)
 -- 				end
--- 			end)
--- 			UIDropDownMenu_SetSelectedValue(button.Mode, items[Id])
-
--- 			local b = _G[button.Mode:GetName() .. "Button"]
--- 			b:SetHitRectInsets(-(button.Mode:GetWidth() - (b:GetWidth() * 2)), -3, -3, -3)
-
--- 			button.Delete:SetScript("OnClick", function()
--- 				changes.items[Id] = nil
--- 				wipe(itemIds)
--- 				updateItemList(self)
--- 			end)
-
--- 			button:SetBackdropColor(1, 1, 1, (index / 2 == floor(index / 2)) and 0 or 0.1)
-
--- 			button:Show()
--- 		else
--- 			button:Hide()
--- 		end
--- 	end
-
--- 	HybridScrollFrame_Update(self, nItems * self.buttonHeight, #self.buttons * self.buttonHeight)
--- end
-
--- local function checkInput(state)
--- 	local obj, objIsNumber, itemName, itemLink, itemTexture, itemId = panel.InputNewItem:GetText()
--- 	local _ -- declare underscore as local variable
-
--- 	if obj then
--- 		objIsNumber = (tonumber(obj) and true or false)
--- 		itemName, itemLink, _, _, _, _, _, _, _, itemTexture = GetItemInfo(obj)
--- 	end
-
--- 	if (itemLink) then
--- 		itemId = itemLink:match("Hitem:(%d+)");
--- 	end
-
--- 	if (not itemTexture) then
--- 		itemTexture = "Interface\\ICONS\\inv_misc_questionmark";
--- 	end
-
--- 	if (itemId and (changes.items[itemId] ~= nil or ns.AutoRollDB.items[itemId] ~= nil)) then
--- 		itemName, itemId = "Item already in list.", nil
--- 	elseif (not itemId) then
--- 		if (objIsNumber and state == "OnUpdate") then
--- 			itemName, itemId = "...", nil;
--- 		elseif (objIsNumber and state == "OnEvent") or (not objIsNumber and state == "OnUpdate") then
--- 			itemName, itemId = "Couldn't find a valid item.", nil
--- 		end
--- 	end
-
--- 	panel.ItemHelper:SetText(("|T%s:24:24:0:0|t %s"):format(itemTexture, itemName))
-
--- 	if itemId then
--- 		panel.InputNewItem.itemID = itemId
--- 		panel.AddNewItem:Enable()
--- 	else
--- 		panel.InputNewItem.itemID = nil
--- 		panel.AddNewItem:Disable()
--- 	end
-
--- 	ns.debugPrint(
--- 		"State: "..state,
--- 		"Obj: "..obj,
--- 		"ItemId: ".. (itemId or "nil"),
--- 		"ItemName: ".. (itemName or "nil")
--- 	);
--- end
-
--- local function addItem()
--- 	local id = tonumber(panel.InputNewItem.itemID);
--- 	if(id and not ns.AutoRollDB.items[id] and not changes.items[id])then
--- 		changes.items[id] = 1; -- greed is default
--- 		panel.InputNewItem:SetText("");
--- 		panel:refresh(true);
--- 	end
--- end
-
----------------------------------------------------------------
----------------------------------------------------------------
-
--- function panel:okay()
--- 	for i, v in pairs(changes) do
--- 		if (i == "items") then
--- 			AutoRollDB.items = CopyTable(changes.items);
--- 		else
--- 			AutoRollDB[i] = v;
--- 			if (i == "enabled") then
--- 				ns.AddOnEnabled();
+-- 			else
+-- 				-- Item name or link input
+-- 				local itemName, itemLink = GetItemInfo(text)
+-- 				if itemLink then
+-- 					itemID = itemLink:match("item:(%d+)")
+-- 					itemID = tonumber(itemID)
+-- 					if itemID and not ns.AutoRollDB.items[itemID] then
+-- 						addButton:Enable()
+-- 						return itemID
+-- 					else
+-- 						helpText:SetText("Item already in list")
+-- 						helpText:SetTextColor(1, 0.5, 0.5)
+-- 					end
+-- 				else
+-- 					helpText:SetText("Item not found")
+-- 					helpText:SetTextColor(1, 0.5, 0.5)
+-- 				end
 -- 			end
 -- 		end
+-- 		addButton:Disable()
+-- 		return nil
 -- 	end
--- 	changes = {};
--- 	ns.updateItemNames();
--- end
-
--- function panel:cancel()
--- 	changes = {};
--- end
-
--- function panel:default()
--- 	AutoRollDB = ns.AutoRollDB_defaults;
--- 	ReloadUI();
--- end
-
--- function panel:refresh(force)
--- 	if (force == true) then
--- 		wipe(itemIds);
--- 	end
--- 	for _, frame in pairs(panel.controls) do
--- 		if (type(frame.ctrl) == "function") then
--- 			frame.ctrl();
+-- 	
+-- 	-- Handle text changes with delayed validation
+-- 	editBox:SetScript("OnTextChanged", function()
+-- 		helpText:SetText("Enter item ID or item name/link")
+-- 		helpText:SetTextColor(0.7, 0.7, 0.7)
+-- 		C_Timer.After(0.5, ValidateInput)
+-- 	end)
+-- 	
+-- 	-- Add item to the database
+-- 	local function AddItem()
+-- 		local itemID = ValidateInput()
+-- 		if itemID then
+-- 			ns.AutoRollDB.items[itemID] = 2 -- Default to Greed
+-- 			editBox:SetText("")
+-- 			UpdateItemList()
+-- 			addButton:Disable()
 -- 		end
 -- 	end
+-- 	
+-- 	-- Handle button click and enter key
+-- 	addButton:SetScript("OnClick", AddItem)
+-- 	editBox:SetScript("OnEnterPressed", AddItem)
+-- 	
+-- 	return frame
 -- end
-
--- panel.checkInput = false;
--- panel.elapsed = 0;
--- panel:SetScript("OnUpdate", function(self, elapse)
--- 	if (self.checkInput) then
--- 		self.elapsed = self.elapsed + elapse;
--- 		if (self.elapsed > .76) then
--- 			self.checkInput = false;
--- 			checkInput("OnUpdate");
--- 		end
--- 	end
--- end);
-
-
--- panel:SetScript("OnEvent", function(self, event, ...)
--- 	if (event == "GET_ITEM_INFO_RECEIVED") then
--- 		local id = ...;
--- 		ns.debugPrint(
--- 			"Event: " .. event,
--- 			"itemId: " .. id
--- 		);
--- 		if (self.InputNewItem and self.InputNewItem:HasFocus()) then
--- 			checkInput("OnEvent");
--- 		end
--- 	end
--- end)
 
 
 local function OnSettingEnabled(_, _)
@@ -199,115 +208,131 @@ local function OnSettingEnabled(_, _)
 end
 
 local function OnSettingDebugMode(_, _)
-	ns.AddOnEnabled()
 end
 
 
-local function initPanel()
-	local category = Settings.RegisterVerticalLayoutCategory(addon)
+-- COMMENTED OUT: New vertical layout initialization - not working yet
+-- local function initOptionsPanel()
+-- 	local category, layout = Settings.RegisterVerticalLayoutCategory(addon)
 
+-- 	do
+-- 		local variableKey = "enabled"
+-- 		local description = "Enable AutoRoll"
+-- 		local tooltip = "Enable/Disable automatic rolling on all items. Uses item list settings when available, otherwise rolls greed."
+-- 		local defaultValue = true
+-- 			
+-- 		local setting = Settings.RegisterAddOnSetting(category, addon.."_"..variableKey, variableKey, ns.AutoRollDB, type(defaultValue), description, defaultValue)
+-- 		Settings.CreateCheckbox(category, setting, tooltip)
+-- 		setting:SetValueChangedCallback(OnSettingEnabled)
+-- 	end
+-- 	
+-- 	do
+-- 		local variableKey = "debug"
+-- 		local description = "Enable debug messages"
+-- 		local tooltip = "Enable/Disable debug messages in chat window."
+-- 		local defaultValue = false
+-- 			
+-- 		local setting = Settings.RegisterAddOnSetting(category, addon.."_"..variableKey, variableKey, ns.AutoRollDB, type(defaultValue), description, defaultValue)
+-- 		Settings.CreateCheckbox(category, setting, tooltip)
+-- 		setting:SetValueChangedCallback(OnSettingDebugMode)
+-- 	end
+
+-- 	-- Add section header for item list
+-- 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Item Roll Settings"))
+-- 	
+-- 	-- Add custom item list frame
+-- 	local itemListInitializer = Settings.CreateElementInitializer("Frame", {
+-- 		initFrame = function(frame)
+-- 			itemListFrame = CreateItemListFrame()
+-- 			itemListFrame:SetParent(frame)
+-- 			itemListFrame:SetPoint("TOPLEFT")
+-- 			itemListFrame:SetPoint("TOPRIGHT")
+-- 			itemListFrame:SetHeight(300)
+-- 			UpdateItemList()
+-- 		end
+-- 	})
+-- 	layout:AddInitializer(itemListInitializer)
+-- 	
+-- 	-- Add custom add item frame
+-- 	local addItemInitializer = Settings.CreateElementInitializer("Frame", {
+-- 		initFrame = function(frame)
+-- 			local addItemFrame = CreateAddItemFrame()
+-- 			addItemFrame:SetParent(frame)
+-- 			addItemFrame:SetPoint("TOPLEFT")
+-- 			addItemFrame:SetPoint("TOPRIGHT")
+-- 			addItemFrame:SetHeight(80)
+-- 		end
+-- 	})
+-- 	layout:AddInitializer(addItemInitializer)
+
+-- 	-- Register the panel with the settings system
+-- 	Settings.RegisterAddOnCategory(category)
+-- end
+
+-- initOptionsPanel()
+
+-- TEMPORARY: Use basic settings registration until vertical layout is fixed
+local function initBasicSettings()
+	local category = Settings.RegisterVerticalLayoutCategory(addon)
+	
 	do
 		local variableKey = "enabled"
-		local description = "Enable AutoRoll"
-		local tooltip = "Enable/Disable automatic rolling on all items. Uses item list settings when available, otherwise rolls greed."
-		local defaultValue = true
-			
-		local setting = Settings.RegisterAddOnSetting(category, addon.."_"..variableKey, variableKey, ns.AutoRollDB, type(defaultValue), description, defaultValue)
+		local name = "Enable AutoRoll"
+		local tooltip = "Enables the auto roll functionality"
+		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, ns.AutoRollDB, type(ns.AutoRollDB[variableKey]), name, ns.AutoRollDB[variableKey])
 		Settings.CreateCheckbox(category, setting, tooltip)
 		setting:SetValueChangedCallback(OnSettingEnabled)
 	end
-	
+
 	do
-		local variableKey = "debug"
-		local description = "Enable debug messages"
-		local tooltip = "Enable/Disable debug messages in chat window."
-		local defaultValue = false
-			
-		local setting = Settings.RegisterAddOnSetting(category, addon.."_"..variableKey, variableKey, ns.AutoRollDB, type(defaultValue), description, defaultValue)
+		local variableKey = "debugMode"
+		local name = "Debug Mode"
+		local tooltip = "Enable debug mode for troubleshooting"
+		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, ns.AutoRollDB, type(ns.AutoRollDB[variableKey]), name, ns.AutoRollDB[variableKey])
 		Settings.CreateCheckbox(category, setting, tooltip)
 		setting:SetValueChangedCallback(OnSettingDebugMode)
 	end
 
-	-- --- Inset border frame for itemList (scrollFrame)
-	-- local listName = "itemList"
-	-- local listFrame = panel:GetName() .. "itemList"
-	-- local borderName = "itemListBorder"
-	-- panel[borderName] = CreateFrame("Frame", nil, panel)
-	-- setPoints(panel[borderName], {"TOPLEFT", panel.title, "BOTTOMLEFT", 0, -66}, {"BOTTOMRIGHT", -14, 105})
-	-- panel[borderName]:SetBackdrop({
-	-- 	bgFile = "Interface\\TutorialFrame\\TutorialFrameBackground",
-	-- 	edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-	-- 	tile = true, tileSize = 32, edgeSize = 20,
-	-- 	insets = {left = 4, right = 4, top = 4, bottom = 4}
-	-- })
+	do
+		local variableKey = "defaultRollMode"
+		local name = "Default Roll Mode"
+		local tooltip = "The default roll mode for items not in the item list"
+		local defaultValue = 2 -- ROLL_GREED
+		
+		local function GetOptions()
+			local container = Settings.CreateControlTextContainer()
+			container:Add(0, "Pass")
+			container:Add(2, "Greed")
+			container:Add(1, "Need")
+			container:Add(3, "Disenchant")
+			container:Add(4, "Transmog")
+			container:Add(5, "Do nothing")
+			return container:GetData()
+		end
+		
+		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, ns.AutoRollDB, type(defaultValue), name, defaultValue)
+		Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+	end
 
-	-- --- itemList ScrollFrame
-	-- panel[listName] = CreateFrame("ScrollFrame", listFrame, panel[borderName], "BasicHybridScrollFrameTemplate")
-	-- setPoints(panel[listName], {"TOPLEFT", 8, -7}, {"BOTTOMRIGHT", -28, 7})
-	-- setPoints(panel[listName].scrollBar,
-	-- 	{"TOPLEFT", panel[listName], "TOPRIGHT", 0, -14},
-	-- 	{"BOTTOMLEFT", panel[listName], "BOTTOMRIGHT", 0, 13})
-	-- panel[listName].scrollBar.doNotHide = true
-	-- panel[listName].update = updateItemList
-	-- HybridScrollFrame_CreateButtons(panel[listName], "AutoRoll_ItemButtonTemplate", 0, 0, nil, nil, 0, -3)
-	-- setControl(panel[listName], function() updateItemList(panel[listName]) end)
+	do
+		local variableKey = "fallbackRollMode"
+		local name = "Fallback Roll Mode"
+		local tooltip = "The roll mode to use when the default roll mode is not available"
+		local defaultValue = 5 -- ROLL_DO_NOTHING
+		
+		local function GetOptions()
+			local container = Settings.CreateControlTextContainer()
+			container:Add(5, "Do nothing")
+			container:Add(0, "Pass")
+			container:Add(2, "Greed")
+			return container:GetData()
+		end
+		
+		local setting = Settings.RegisterAddOnSetting(category, variableKey, variableKey, ns.AutoRollDB, type(defaultValue), name, defaultValue)
+		Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+	end
 
-	-- --- add new items
-	-- local inputName = "InputNewItem"
-	-- panel[inputName] = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
-	-- panel[inputName]:SetSize(240, 26)
-	-- panel[inputName]:SetAutoFocus(false)
-	-- panel[inputName].Label = panel[inputName]:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	-- panel[inputName].Label:SetPoint("BOTTOMLEFT", panel[inputName], "TOPLEFT")
-	-- panel[inputName].Label:SetText("Add new item:")
-	-- panel[inputName]:SetScript("OnTextChanged", function(self)
-	-- 	if strlen(self:GetText()) > 0 then
-	-- 		panel.checkInput = true
-	-- 		panel.elapsed = 0
-	-- 	else
-	-- 		panel.checkInput = false
-	-- 		panel.elapsed = 0
-	-- 		panel.AddNewItem:Disable()
-	-- 	end
-	-- end)
-	-- panel[inputName]:SetScript("OnEnterPressed", addItem)
-	-- --- hook ChatFrame_OnHyperlinkShow(frame, link, text, button)
-
-	-- setTooltip(panel[inputName],
-	-- 	"Add new Item",
-	-- 	"Adding an item by its item id.",
-	-- 	{"Add an item by name is only possible for items in your bag.", 1, 1, 0, 1},
-	-- 	{"Press enter or push the Add-Button to add the item to the item list", 0, 0.8, 0.95, 1}
-	-- )
-	-- setPoints(panel[inputName], {"TOPLEFT", panel.itemList, "BOTTOMLEFT", 20, -22})
-	-- setControl(panel[inputName], function() panel[inputName]:SetText("") end)
-
-	-- --- little helper to show if item name or id correct.
-	-- panel.ItemHelper = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge");
-	-- panel.ItemHelper:SetPoint("TOPLEFT",panel.InputNewItem,"BOTTOMLEFT", -3, -3);
-	-- panel.ItemHelper:SetText("|TInterface\\ICONS\\inv_misc_questionmark:24:24:0:0|t");
-
-	-- --- "add new item"-Button
-	-- local n = "AddNewItem"
-	-- local N = panel:GetName() .. n
-	-- panel[n] = CreateFrame("Button", N, panel, "UIPanelButtonTemplate");
-	-- panel[n].Text = _G[N.."Text"];
-	-- panel[n].Text:SetText(ADD);
-	-- panel[n]:SetWidth(panel[n].Text:GetWidth()+24);
-	-- panel[n]:SetScript("OnClick",addItem);
-	-- panel[n]:Disable();
-	-- setPoints(panel[n],{"LEFT", panel.InputNewItem, "RIGHT", 10, 1});
-
-	-- Register the panel with the settings system
 	Settings.RegisterAddOnCategory(category)
 end
 
--- Create a frame to handle ADDON_LOADED event
-local optionFrame = CreateFrame("Frame")
-optionFrame:RegisterEvent("ADDON_LOADED")
-optionFrame:SetScript("OnEvent", function(self, event, addonName)
-	if addonName == "AutoRoll" then
-		initPanel()
-		self:UnregisterEvent("ADDON_LOADED")
-	end
-end)
+initBasicSettings()

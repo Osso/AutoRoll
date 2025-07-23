@@ -22,6 +22,8 @@ ns.ModeLabels = {
 ns.AutoRollDB = {
 	enabled = true,
 	debugMode = false,
+	defaultRollMode = ROLL_GREED,
+	fallbackRollMode = ROLL_DO_NOTHING,
 	version = 1,
 	items = {
 		[120945] = ROLL_GREED, -- Primal Spirit
@@ -83,7 +85,7 @@ function main:ADDON_LOADED(name)
 end
 
 function main:START_LOOT_ROLL(rollID)
-	local _, name, _, _, _, canNeed, canGreed, canDisenchant = GetLootRollItemInfo(rollID)
+	local _, name, _, _, _, canNeed, canGreed, canDisenchant, _, _, _, _, canTransmog = GetLootRollItemInfo(rollID)
 
 	if not rollID or not name then
 		ns.debugPrint(
@@ -94,28 +96,52 @@ function main:START_LOOT_ROLL(rollID)
 		return
 	end
 
-	local itemRollMode = itemNames[name] or ROLL_GREED -- auto greed when not in item list
+	local itemRollMode = itemNames[name] or ns.AutoRollDB.defaultRollMode -- use default roll mode when not in item list
+	local actualRollMode = nil
 
-	if canNeed and itemRollMode == ROLL_NEED then
+	-- Try to use the desired roll mode, fall back if not available
+	if itemRollMode == ROLL_NEED and canNeed then
 		RollOnLoot(rollID, ROLL_NEED)
-	elseif canDisenchant and itemRollMode == ROLL_DISENCHANT then
+		actualRollMode = ROLL_NEED
+	elseif itemRollMode == ROLL_DISENCHANT and canDisenchant then
 		RollOnLoot(rollID, ROLL_DISENCHANT)
-	elseif canGreed and itemRollMode == ROLL_GREED then
+		actualRollMode = ROLL_DISENCHANT
+	elseif itemRollMode == ROLL_GREED and canGreed then
 		RollOnLoot(rollID, ROLL_GREED)
+		actualRollMode = ROLL_GREED
+	elseif itemRollMode == ROLL_TRANSMOG and canTransmog then
+		RollOnLoot(rollID, ROLL_TRANSMOG)
+		actualRollMode = ROLL_TRANSMOG
 	elseif itemRollMode == ROLL_PASS then
 		RollOnLoot(rollID, ROLL_PASS)
-	-- ROLL_DO_NOTHING means don't roll at all
+		actualRollMode = ROLL_PASS
+	elseif itemRollMode ~= ROLL_DO_NOTHING then
+		actualRollMode = ROLL_DO_NOTHING
+	end
+	
+	if actualRollMode == nil then
+	-- Desired roll mode not available, use fallback
+		local fallbackMode = ns.AutoRollDB.fallbackRollMode
+		if fallbackMode == ROLL_GREED and canGreed then
+			RollOnLoot(rollID, ROLL_GREED)
+			actualRollMode = ROLL_GREED
+		elseif fallbackMode == ROLL_PASS then
+			RollOnLoot(rollID, ROLL_PASS)
+			actualRollMode = ROLL_PASS
+		-- If fallback is ROLL_DO_NOTHING or also not available, don't roll
+		end
 	end
 
 	ns.debugPrint(
 		"Event: START_LOOT_ROLL",
 		"itemName: " .. (name or "unknown"),
 		"rollID: " .. rollID,
-		"Action: " .. (ns.ModeLabels[itemRollMode] or "nothing")
+		"Desired: " .. (ns.ModeLabels[itemRollMode] or "nothing"),
+		"Actual: " .. (actualRollMode and ns.ModeLabels[actualRollMode] or "nothing")
 	)
 
-	if itemRollMode ~= ROLL_DO_NOTHING then
-		ns.print(name, "=", ns.ModeLabels[itemRollMode])
+	if actualRollMode then
+		ns.print(name, "=", ns.ModeLabels[actualRollMode])
 	end
 end
 
