@@ -19,7 +19,7 @@ ns.ModeLabels = {
 	[ROLL_PASS] = PASS,
 	[ROLL_DO_NOTHING] = "Do nothing"
 }
-ns.AutoRollDB_defaults = {
+ns.AutoRollDB = {
 	enabled = true,
 	debugMode = false,
 	version = 1,
@@ -28,7 +28,6 @@ ns.AutoRollDB_defaults = {
 		[116920] = ROLL_DO_NOTHING, -- True steel lockbox
 	}
 }
-AutoRollDB = ns.AutoRollDB_defaults
 ns.pendingItemInfo = nil
 
 function ns.print(arg1, ...)
@@ -40,7 +39,7 @@ function ns.print(arg1, ...)
 end
 
 function ns.debugPrint(...)
-	if not AutoRollDB.debugMode then return end
+	if not ns.AutoRollDB.debugMode then return end
 	ns.print("(Debug Message)")
 	for i, v in ipairs({...}) do
 		print(v)
@@ -50,7 +49,7 @@ end
 local itemNames = {}
 local function updateItemNames()
 	wipe(itemNames)
-	for i, v in pairs(AutoRollDB.items) do
+	for i, v in pairs(ns.AutoRollDB.items) do
 		local name = GetItemInfo(i)
 		if name then
 			itemNames[name] = v
@@ -62,13 +61,13 @@ ns.updateItemNames = updateItemNames
 local main = CreateFrame("Frame", "AutoRollFrame")
 
 function ns.AddOnEnabled()
-	if AutoRollDB.enabled then
+	if ns.AutoRollDB.enabled then
 		main:RegisterEvent("START_LOOT_ROLL")
 		updateItemNames()
 	else
 		main:UnregisterEvent("START_LOOT_ROLL")
 	end
-	ns.print("|cffffff00Addon", (AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
+	ns.print("|cffffff00Addon", (ns.AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
 end
 
 function main:ADDON_LOADED(name)
@@ -77,8 +76,8 @@ function main:ADDON_LOADED(name)
 	end
 
 	ns.print("|Cffffff00Addon loaded...|r")
-	AutoRollDB.version = version
-	if AutoRollDB.enabled then
+	ns.AutoRollDB.version = version
+	if ns.AutoRollDB.enabled then
 		ns.AddOnEnabled()
 	end
 end

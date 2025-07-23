@@ -1,0 +1,53 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\..\FrameXML\UI.xsd">
+
+	<Button name="AutoRoll_ItemButtonTemplate" virtual="true">
+		<Size y="42" />
+		<Anchors>
+			<Anchor point="LEFT" />
+			<Anchor point="RIGHT" />
+		</Anchors>
+		<Backdrop bgFile="Interface\Buttons\White8x8" tile="true" />
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="ItemIcon">
+					<Size x="32" y="32" />
+					<Anchors>
+						<Anchor point="LEFT" x="12" />
+					</Anchors>
+				</Texture>
+				<FontString parentKey="ItemName" inherits="GameFontNormalLarge" justifyH="LEFT">
+					<Size y="17"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.ItemIcon" relativePoint="TOPRIGHT" x="6" />
+					</Anchors>
+				</FontString>
+				<FontString parentKey="ItemIDLabel" inherits="GameFontNormalSmall" text="ItemID:">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeKey="$parent.ItemIcon" relativePoint="BOTTOMRIGHT" x="6" />
+					</Anchors>
+				</FontString>
+				<FontString parentKey="ItemID" inherits="GameFontNormalSmall" justifyH="RIGHT">
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.ItemIDLabel" relativePoint="RIGHT" x="6" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button parentKey="Delete" inherits="UIPanelButtonTemplate" text="DELETE">
+				<Size x="80" y="22" />
+				<Anchors>
+					<Anchor point="RIGHT" x="-12" />
+				</Anchors>
+			</Button>
+			<Frame name="$parentMode" parentKey="Mode" inherits="UIDropDownMenuTemplate">
+				<Size x="80" y="32" />
+				<Anchors>
+					<Anchor point="RIGHT" relativeKey="$parent.Delete" relativePoint="LEFT" x="0" y="-2" />
+				</Anchors>
+			</Frame>
+		</Frames>
+	</Button>
+
+</Ui>
