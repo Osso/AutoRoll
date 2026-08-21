@@ -194,7 +194,7 @@ function main:START_LOOT_ROLL(rollID)
 	elseif itemRollMode == ROLL_PASS then
 		RollOnLoot(rollID, ROLL_PASS)
 		actualRollMode = ROLL_PASS
-	elseif itemRollMode ~= ROLL_DO_NOTHING then
+	elseif itemRollMode == ROLL_DO_NOTHING then
 		actualRollMode = ROLL_DO_NOTHING
 	end
 	
