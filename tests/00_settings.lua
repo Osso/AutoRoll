@@ -80,6 +80,24 @@ local function restoreRegistrationFunctions()
 	CreateSettingsListSectionHeaderInitializer = original.createSectionHeader
 end
 
+local function installLootHistoryOnShowObserver()
+	local hookCalled
+	local shownDuringOnShow
+
+	GroupLootHistoryFrame:HookScript("OnShow", function(frame)
+		hookCalled = true
+		shownDuringOnShow = frame:IsShown()
+	end)
+
+	_G.TestAutoRollObserveLootHistoryOnShow = function()
+		hookCalled = false
+		shownDuringOnShow = nil
+		GroupLootHistoryFrame:Hide()
+		GroupLootHistoryFrame:Show()
+		return hookCalled, shownDuringOnShow
+	end
+end
+
 local function loadAutoRollWithRegistrationCapture()
 	-- The simulator does not initialize Blizzard loot-history data required by the original handler.
 	GroupLootHistoryFrame:SetScript("OnShow", function() end)
@@ -90,6 +108,7 @@ local function loadAutoRollWithRegistrationCapture()
 		error(loaded, 0)
 	end
 	assertTrue(loaded, "failed to load AutoRoll: " .. tostring(reason))
+	installLootHistoryOnShowObserver()
 end
 
 local function findSetting(settingID)
@@ -242,7 +261,7 @@ test("registers exact dropdown option order and final category", function()
 	assertEquals(captured.category, captured.addonCategories[1])
 end)
 
-test("restores registration wrappers and loads AutoRoll once", function()
+test("restores registration wrappers and exposes the addon frame", function()
 	assertEquals(original.registerVerticalLayoutCategory, Settings.RegisterVerticalLayoutCategory)
 	assertEquals(original.registerAddOnSetting, Settings.RegisterAddOnSetting)
 	assertEquals(original.createCheckbox, Settings.CreateCheckbox)

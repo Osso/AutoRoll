@@ -64,16 +64,6 @@ local function restoreLootHistoryVisibility(wasShown)
 	AutoRollDB.autoCloseLootWindow = autoCloseLootWindow
 end
 
-local function showLootHistoryThroughHooks()
-	local shownDuringOnShow
-	GroupLootHistoryFrame:Hide()
-	GroupLootHistoryFrame:HookScript("OnShow", function(frame)
-		shownDuringOnShow = frame:IsShown()
-	end)
-	GroupLootHistoryFrame:Show()
-	return shownDuringOnShow
-end
-
 local function restoreTestState(state)
 	GetInstanceInfo = state.getInstanceInfo
 	GetLootRollItemInfo = state.getLootRollItemInfo
@@ -455,16 +445,22 @@ isolatedTest("loot history remains visible outside supported raids", function()
 	assertFalse(frame.wasHidden)
 end)
 
-isolatedTest("loot history OnShow hook hides the real frame in an enabled raid", function()
+isolatedTest("loot history is hidden when observed during OnShow in an enabled raid", function()
 	useSupportedRaid()
 	AutoRollDB.autoCloseLootWindow = true
 
-	assertFalse(showLootHistoryThroughHooks())
+	local hookCalled, shownDuringOnShow = _G.TestAutoRollObserveLootHistoryOnShow()
+
+	assertTrue(hookCalled)
+	assertFalse(shownDuringOnShow)
 end)
 
-isolatedTest("loot history OnShow hook leaves the real frame visible when disabled", function()
+isolatedTest("loot history remains visible when observed during OnShow while disabled", function()
 	useSupportedRaid()
 	AutoRollDB.autoCloseLootWindow = false
 
-	assertTrue(showLootHistoryThroughHooks())
+	local hookCalled, shownDuringOnShow = _G.TestAutoRollObserveLootHistoryOnShow()
+
+	assertTrue(hookCalled)
+	assertTrue(shownDuringOnShow)
 end)
