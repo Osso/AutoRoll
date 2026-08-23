@@ -1,7 +1,7 @@
 
 local _, ns = ...
 
-local function status(bool, short)
+local function status(bool)
 	return "Status: " .. (bool and "enabled" or "disabled")
 end
 
@@ -15,12 +15,12 @@ SlashCmdList["AUTOROLL"] = function(cmd_str)
 
 	if cmd == "" then
 		ns.print("Chat command list for /autoroll")
-		ns.print(nil, "toggle - enable/disable AutoRoll on all items", status(AutoRollDB.enabled))
+		ns.print(nil, "toggle - enable/disable AutoRoll in enabled raids", status(AutoRollDB.enabled))
 		ns.print(nil, "debug - enable/disable debug messages in chat window", status(AutoRollDB.debugMode))
 		ns.print(nil, "raid - show current raid status and enabled raids")
 
 	elseif cmd == "toggle" then
-		toggle("AutoRoll on all items", "enabled")
+		toggle("AutoRoll in enabled raids", "enabled")
 		ns.AddOnEnabled()
 
 	elseif cmd == "debug" then

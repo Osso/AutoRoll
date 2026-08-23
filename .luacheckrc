@@ -4,7 +4,7 @@ std = "none"
 -- WoW API globals
 globals = {
 	-- Frame/UI globals
-	"CreateFrame", "Settings", "_G",
+	"CreateFrame", "Settings",
 
 	-- Item/Loot globals
 	"GetLootRollItemInfo", "RollOnLoot", "GetInstanceInfo",
@@ -14,13 +14,13 @@ globals = {
 	"AutoRollDB", "SlashCmdList", "SLASH_AUTOROLL1",
 
 	-- Lua standard but need to be explicit (std = "none")
-	"strsplit", "print", "table", "ipairs", "pairs", "type", "tostring",
+	"strsplit", "print", "ipairs", "pairs", "type", "tostring",
 }
 
 -- In-game test harness globals (tests/*.lua)
 files["tests"] = {
 	globals = {
-		"C_AddOns", "A_Admin", "test", "AutoRollFrame",
+		"C_AddOns", "A_Admin", "test", "AutoRollFrame", "_G",
 		"assertEquals", "assertTrue", "assertFalse", "assertNotNil", "assert",
 		"GetActiveLootRollIDs", "GroupLootContainer_AddRoll",
 	},

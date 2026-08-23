@@ -89,6 +89,15 @@ local function createLootHistoryFrame()
 	}
 end
 
+test("raid defaults enable Shadowlands and Dragonflight only", function()
+	for _, instanceID in ipairs({2296, 2450, 2481, 2522, 2569, 2549}) do
+		assertTrue(AutoRollDB.raidSettings[instanceID])
+	end
+	for _, instanceID in ipairs({2657, 2769, 2810}) do
+		assertFalse(AutoRollDB.raidSettings[instanceID])
+	end
+end)
+
 test("configured Do Nothing does not invoke Greed fallback", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_DO_NOTHING

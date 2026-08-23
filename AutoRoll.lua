@@ -1,6 +1,5 @@
 
 local addon, ns = ...
-local version = 1
 
 -- Roll constants (match WoW API RollOnLoot parameters)
 local ROLL_PASS = 0
@@ -10,7 +9,6 @@ local ROLL_DISENCHANT = 3
 local ROLL_TRANSMOG = 4
 local ROLL_DO_NOTHING = 5  -- Internal only - don't roll at all
 
--- ModeLabels indexed by our roll constants (0-based indexing won't work for Lua tables, so we adjust)
 ns.ModeLabels = {
 	[ROLL_GREED] = "Greed",
 	[ROLL_NEED] = "Need",
@@ -19,21 +17,41 @@ ns.ModeLabels = {
 	[ROLL_PASS] = "Pass",
 	[ROLL_DO_NOTHING] = "Do nothing"
 }
--- Raid instance IDs for raids with loot rolls (Shadowlands, Dragonflight, The War Within)
-ns.RaidInstances = {
-	-- Shadowlands
-	[2296] = "Castle Nathria",
-	[2450] = "Sanctum of Domination",
-	[2481] = "Sepulcher of the First Ones",
-	-- Dragonflight
-	[2522] = "Vault of the Incarnates",
-	[2569] = "Aberrus, the Shadowed Crucible",
-	[2549] = "Amirdrassil, the Dream's Hope",
-	-- The War Within
-	[2657] = "Nerub-ar Palace",
-	[2769] = "Liberation of Undermine",
-	[2810] = "Manaforge: Omega"
+ns.RaidGroups = {
+	{
+		expansion = "Shadowlands",
+		raids = {
+			{instanceID = 2296, name = "Castle Nathria", enabledByDefault = true},
+			{instanceID = 2450, name = "Sanctum of Domination", enabledByDefault = true},
+			{instanceID = 2481, name = "Sepulcher of the First Ones", enabledByDefault = true},
+		},
+	},
+	{
+		expansion = "Dragonflight",
+		raids = {
+			{instanceID = 2522, name = "Vault of the Incarnates", enabledByDefault = true},
+			{instanceID = 2569, name = "Aberrus, the Shadowed Crucible", enabledByDefault = true},
+			{instanceID = 2549, name = "Amirdrassil, the Dream's Hope", enabledByDefault = true},
+		},
+	},
+	{
+		expansion = "The War Within",
+		raids = {
+			{instanceID = 2657, name = "Nerub-ar Palace", enabledByDefault = false},
+			{instanceID = 2769, name = "Liberation of Undermine", enabledByDefault = false},
+			{instanceID = 2810, name = "Manaforge: Omega", enabledByDefault = false},
+		},
+	},
 }
+
+ns.RaidInstances = {}
+local raidSettingsDefaults = {}
+for _, raidGroup in ipairs(ns.RaidGroups) do
+	for _, raid in ipairs(raidGroup.raids) do
+		ns.RaidInstances[raid.instanceID] = raid.name
+		raidSettingsDefaults[raid.instanceID] = raid.enabledByDefault
+	end
+end
 
 -- Default database structure
 ns.AutoRollDB_defaults = {
@@ -41,21 +59,7 @@ ns.AutoRollDB_defaults = {
 	debugMode = false,
 	defaultRollMode = ROLL_GREED,
 	fallbackRollMode = ROLL_DO_NOTHING,
-	version = 1,
-	raidSettings = {
-		-- Shadowlands
-		[2296] = true, -- Castle Nathria
-		[2450] = true, -- Sanctum of Domination
-		[2481] = true, -- Sepulcher of the First Ones
-		-- Dragonflight
-		[2522] = true, -- Vault of the Incarnates
-		[2569] = true, -- Aberrus, the Shadowed Crucible
-		[2549] = true, -- Amirdrassil, the Dream's Hope
-		-- The War Within
-		[2657] = false, -- Nerub-ar Palace
-		[2769] = false, -- Liberation of Undermine
-		[2810] = false  -- Manaforge: Omega
-	},
+	raidSettings = raidSettingsDefaults,
 	autoCloseLootWindow = true,
 }
 
@@ -107,8 +111,6 @@ function ns.debugPrint(...)
 	end
 end
 
--- Removed item-specific roll handling
-
 -- Check if we're currently in a supported raid
 local function isInSupportedRaid()
 	local instanceName, instanceType, _, _, _, _, _, instanceID = GetInstanceInfo()
@@ -159,7 +161,6 @@ function main:ADDON_LOADED(name)
 		return
 	end
 
-	AutoRollDB.version = version
 	ns.initSettingsPanel()
 	ns.print("|Cffffff00Addon loaded...|r")
 	if AutoRollDB.enabled then
@@ -212,7 +213,7 @@ function main:START_LOOT_ROLL(rollID)
 	end
 
 	if actualRollMode == nil then
-	-- Desired roll mode not available, use fallback
+		-- Desired roll mode not available, use fallback
 		local fallbackMode = AutoRollDB.fallbackRollMode
 		if fallbackMode == ROLL_GREED and canGreed then
 			RollOnLoot(rollID, ROLL_GREED)

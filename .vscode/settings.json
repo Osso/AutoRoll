@@ -1,18 +1,13 @@
 {
     "Lua.diagnostics.globals": [
-        "CreateFrame", "GameTooltip", "InterfaceOptionsFramePanelContainer",
-        "UIDropDownMenu_SetWidth", "UIDropDownMenu_Initialize", "UIDropDownMenu_CreateInfo",
-        "UIDropDownMenu_AddButton", "UIDropDownMenu_SetSelectedValue", "UIDropDownMenu_Refresh",
-        "HybridScrollFrame_GetOffset", "HybridScrollFrame_Update", "HybridScrollFrame_CreateButtons",
-        "EasyMenu_Initialize", "ToggleDropDownMenu", "Settings", "_G", "AutoRollPanel",
-        "CreateSettingsListSectionHeaderInitializer", "GetInstanceInfo",
-        "GetItemInfo", "GetLootRollItemInfo", "RollOnLoot", "ConfirmLootRoll",
-        "C_LootHistory", "C_Timer", "GroupLootHistoryFrame",
-        "GREED", "NEED", "ROLL_DISENCHANT", "PASS", "OPTIONS", "ADD", "ITEMS", "DELETE", "CANCEL", "CLOSE",
-        "AutoRollDB", "SlashCmdList", "SLASH_AUTOROLL1", "SLASH_AUTOROLL2",
-        "GetAddOnMetadata", "CopyTable", "wipe", "strsplit", "ReloadUI",
-        "print", "tinsert", "floor", "strlen", "table", "ipairs", "pairs",
-        "type", "tostring", "tonumber", "rawset", "setmetatable", "select"
+        "CreateFrame", "Settings", "_G",
+        "GetLootRollItemInfo", "RollOnLoot", "GetInstanceInfo",
+        "GroupLootHistoryFrame", "CreateSettingsListSectionHeaderInitializer",
+        "AutoRollDB", "SlashCmdList", "SLASH_AUTOROLL1",
+        "strsplit", "print", "ipairs", "pairs", "type", "tostring",
+        "C_AddOns", "A_Admin", "test", "AutoRollFrame",
+        "assertEquals", "assertTrue", "assertFalse", "assertNotNil", "assert",
+        "GetActiveLootRollIDs", "GroupLootContainer_AddRoll"
     ],
     "Lua.workspace.library": [
         "${workspaceFolder}"

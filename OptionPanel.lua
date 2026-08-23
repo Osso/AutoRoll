@@ -34,7 +34,7 @@ function ns.initSettingsPanel()
 	do
 		local variableKey = "defaultRollMode"
 		local name = "Default Roll Mode"
-		local tooltip = "The default roll mode for items not in the item list"
+		local tooltip = "The default roll mode to use for loot"
 		local defaultValue = ns.AutoRollDB_defaults.defaultRollMode
 
 		local function GetOptions()
@@ -76,7 +76,7 @@ function ns.initSettingsPanel()
 
 	do
 		local variableKey = "autoCloseLootWindow"
-		local name = "Auto-close Loot Window"
+		local name = "Hide Loot History"
 		local tooltip = "Hide the loot history window while in an enabled raid"
 		local defaultValue = ns.AutoRollDB_defaults[variableKey]
 		local setting = Settings.RegisterAddOnSetting(
@@ -86,72 +86,16 @@ function ns.initSettingsPanel()
 	end
 
 	-- Add raid settings sections by expansion
-	do
-		-- Ensure raidSettings table exists
-		if not AutoRollDB.raidSettings then
-			AutoRollDB.raidSettings = {}
-		end
+	for _, raidGroup in ipairs(ns.RaidGroups) do
+		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(raidGroup.expansion .. " Raids"))
 
-		-- Shadowlands raids
-		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Shadowlands Raids"))
-
-		local shadowlandsRaids = {
-			{2296, "Castle Nathria"},
-			{2450, "Sanctum of Domination"},
-			{2481, "Sepulcher of the First Ones"}
-		}
-
-		for _, raidData in ipairs(shadowlandsRaids) do
-			local instanceID, raidName = raidData[1], raidData[2]
-			local variableKey = instanceID
-			local tooltip = "Enable AutoRoll in " .. raidName
-			local defaultValue = ns.AutoRollDB_defaults.raidSettings[instanceID]
-
+		for _, raid in ipairs(raidGroup.raids) do
+			local variableKey = raid.instanceID
+			local tooltip = "Enable AutoRoll in " .. raid.name
+			local defaultValue = ns.AutoRollDB_defaults.raidSettings[raid.instanceID]
 			local setting = Settings.RegisterAddOnSetting(
-				category, addon.."_raid_" .. instanceID, variableKey,
-				AutoRollDB.raidSettings, type(defaultValue), raidName, defaultValue
-			)
-			Settings.CreateCheckbox(category, setting, tooltip)
-		end
-
-		-- Dragonflight raids
-		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Dragonflight Raids"))
-
-		local dragonflightRaids = {
-			{2522, "Vault of the Incarnates"},
-			{2569, "Aberrus, the Shadowed Crucible"},
-			{2549, "Amirdrassil, the Dream's Hope"}
-		}
-
-		for _, raidData in ipairs(dragonflightRaids) do
-			local instanceID, raidName = raidData[1], raidData[2]
-			local variableKey = instanceID
-			local tooltip = "Enable AutoRoll in " .. raidName
-			local defaultValue = ns.AutoRollDB_defaults.raidSettings[instanceID]
-
-			local setting = Settings.RegisterAddOnSetting(
-				category, addon.."_raid_" .. instanceID, variableKey, AutoRollDB.raidSettings, type(true), raidName, defaultValue
-			)
-			Settings.CreateCheckbox(category, setting, tooltip)
-		end
-
-		-- The War Within raids
-		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("The War Within Raids"))
-
-		local twwRaids = {
-			{2657, "Nerub-ar Palace"},
-			{2769, "Liberation of Undermine"},
-			{2810, "Manaforge: Omega"}
-		}
-
-		for _, raidData in ipairs(twwRaids) do
-			local instanceID, raidName = raidData[1], raidData[2]
-			local variableKey = instanceID
-			local tooltip = "Enable AutoRoll in " .. raidName
-			local defaultValue = ns.AutoRollDB_defaults.raidSettings[instanceID]
-
-			local setting = Settings.RegisterAddOnSetting(
-				category, addon.."_raid_" .. instanceID, variableKey, AutoRollDB.raidSettings, type(true), raidName, defaultValue
+				category, addon.."_raid_" .. raid.instanceID, variableKey,
+				AutoRollDB.raidSettings, type(defaultValue), raid.name, defaultValue
 			)
 			Settings.CreateCheckbox(category, setting, tooltip)
 		end
