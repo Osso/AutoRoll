@@ -26,9 +26,3 @@ files["tests"] = {
 		"GetActiveLootRollIDs", "GroupLootContainer_AddRoll",
 	},
 }
-
--- Ignore some common WoW addon patterns
-ignore = {
-	"212", -- unused argument (common in event handlers)
-	"213", -- unused loop variable
-}

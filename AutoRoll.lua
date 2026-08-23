@@ -124,8 +124,8 @@ function ns.debugPrint(...)
 	end
 
 	ns.print("(Debug Message)")
-	for i, v in ipairs({...}) do
-		print(v)
+	for _, value in ipairs({...}) do
+		print(value)
 	end
 end
 
@@ -156,7 +156,7 @@ function ns.AddOnEnabled()
 	ns.print("|cffffff00Addon", (AutoRollDB and AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
 end
 
-function main:SuppressLootHistory(frame)
+function main.SuppressLootHistory(_, frame)
 	if AutoRollDB.autoCloseLootWindow and ns.isInSupportedRaid() then
 		ns.debugPrint("Suppressing loot history window")
 		frame:Hide()
@@ -169,7 +169,7 @@ if GroupLootHistoryFrame then
 	end)
 end
 
-function main:ADDON_LOADED(name)
+function main.ADDON_LOADED(_, name)
 	if addon ~= name then
 		return
 	end
@@ -221,7 +221,7 @@ local function selectRollMode(desiredRollMode, fallbackRollMode, capabilities)
 	return nil
 end
 
-function main:START_LOOT_ROLL(rollID)
+function main.START_LOOT_ROLL(_, rollID)
 	local inRaid, raidID, raidName = isInSupportedRaid()
 	if not inRaid then
 		ns.debugPrint("Not in a supported raid or raid is disabled, skipping roll")
