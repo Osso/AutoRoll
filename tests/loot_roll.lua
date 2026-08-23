@@ -1,12 +1,84 @@
 local ROLL_PASS = 0
 local ROLL_NEED = 1
 local ROLL_GREED = 2
+local ROLL_DISENCHANT = 3
 local ROLL_TRANSMOG = 4
 local ROLL_DO_NOTHING = 5
+
+local MAX_TEST_ROLL_FRAMES = 4
 
 if not AutoRollFrame then
 	local loaded, reason = C_AddOns.LoadAddOn("AutoRoll")
 	assert(loaded, "failed to load AutoRoll: " .. tostring(reason))
+end
+
+local function copyTable(values)
+	local copiedValues = {}
+	for key, value in pairs(values) do
+		copiedValues[key] = value
+	end
+	return copiedValues
+end
+
+local function replaceTable(target, values)
+	for key in pairs(target) do
+		target[key] = nil
+	end
+	for key, value in pairs(values) do
+		target[key] = value
+	end
+end
+
+local function cleanUpActiveRolls()
+	for _, rollID in ipairs(GetActiveLootRollIDs()) do
+		A_Admin.FireEvent("CANCEL_LOOT_ROLL", rollID)
+		A_Admin.EndLootRoll(rollID)
+	end
+end
+
+local function captureTestState()
+	local database = copyTable(AutoRollDB)
+	database.raidSettings = copyTable(AutoRollDB.raidSettings)
+
+	return {
+		getInstanceInfo = GetInstanceInfo,
+		getLootRollItemInfo = GetLootRollItemInfo,
+		database = database,
+		raidSettings = AutoRollDB.raidSettings,
+		rollEventRegistered = AutoRollFrame:IsEventRegistered("START_LOOT_ROLL"),
+	}
+end
+
+local function restoreTestState(state)
+	GetInstanceInfo = state.getInstanceInfo
+	GetLootRollItemInfo = state.getLootRollItemInfo
+
+	replaceTable(AutoRollDB, state.database)
+	AutoRollDB.raidSettings = state.raidSettings
+	replaceTable(AutoRollDB.raidSettings, state.database.raidSettings)
+
+	if state.rollEventRegistered then
+		AutoRollFrame:RegisterEvent("START_LOOT_ROLL")
+	else
+		AutoRollFrame:UnregisterEvent("START_LOOT_ROLL")
+	end
+
+	cleanUpActiveRolls()
+end
+
+local function isolatedTest(name, body)
+	test(name, function()
+		local state = captureTestState()
+		local bodySucceeded, bodyError = pcall(body)
+		local restoreSucceeded, restoreError = pcall(restoreTestState, state)
+
+		if not bodySucceeded then
+			error(bodyError, 0)
+		end
+		if not restoreSucceeded then
+			error(restoreError, 0)
+		end
+	end)
 end
 
 local function setTestInstance(name, instanceType, instanceID)
@@ -23,7 +95,7 @@ local function useSupportedRaid()
 end
 
 local function findRollFrame(rollID)
-	for index = 1, 4 do
+	for index = 1, MAX_TEST_ROLL_FRAMES do
 		local frame = _G["GroupLootFrame" .. index]
 		if frame:IsShown() and frame.rollID == rollID then
 			return frame
@@ -32,7 +104,7 @@ local function findRollFrame(rollID)
 	return nil
 end
 
-local function startRollWithoutAutoRoll(rollID)
+local function startVisibleRoll(rollID)
 	AutoRollFrame:UnregisterEvent("START_LOOT_ROLL")
 	A_Admin.StartLootRoll(rollID, 30, "Test Item", "Interface\\Icons\\INV_Sword_04", 4, 639)
 
@@ -46,7 +118,7 @@ local function startRollWithoutAutoRoll(rollID)
 	return rollFrame
 end
 
-local function fireAutoRoll(rollID, capabilities)
+local function processAutoRoll(rollID, capabilities)
 	local originalGetLootRollItemInfo = GetLootRollItemInfo
 	if capabilities then
 		GetLootRollItemInfo = function(requestedRollID)
@@ -60,18 +132,18 @@ local function fireAutoRoll(rollID, capabilities)
 
 	AutoRollFrame:RegisterEvent("START_LOOT_ROLL")
 	A_Admin.FireEvent("START_LOOT_ROLL", rollID, 30)
-	GetLootRollItemInfo = originalGetLootRollItemInfo
 end
 
-local function openRollBeforeAutoRollHandlesIt(rollID, capabilities)
-	local rollFrame = startRollWithoutAutoRoll(rollID)
-	fireAutoRoll(rollID, capabilities)
+local function startVisibleRollThenAutoRoll(rollID, capabilities)
+	local rollFrame = startVisibleRoll(rollID)
+	processAutoRoll(rollID, capabilities)
 	return rollFrame
 end
 
-local function cleanUpRoll(rollID)
-	A_Admin.FireEvent("CANCEL_LOOT_ROLL", rollID)
-	A_Admin.EndLootRoll(rollID)
+local function assertRollWasChosen(expectedChoice, rollFrame)
+	assertEquals(expectedChoice, A_Admin.GetLastLootRollChoice())
+	assertEquals(0, #GetActiveLootRollIDs())
+	assertFalse(rollFrame:IsShown())
 end
 
 local function assertRollWasNotChosen(previousChoice, rollFrame)
@@ -89,7 +161,7 @@ local function createLootHistoryFrame()
 	}
 end
 
-test("raid defaults enable Shadowlands and Dragonflight only", function()
+isolatedTest("raid defaults enable Shadowlands and Dragonflight only", function()
 	for _, instanceID in ipairs({2296, 2450, 2481, 2522, 2569, 2549}) do
 		assertTrue(AutoRollDB.raidSettings[instanceID])
 	end
@@ -98,134 +170,133 @@ test("raid defaults enable Shadowlands and Dragonflight only", function()
 	end
 end)
 
-test("configured Do Nothing does not invoke Greed fallback", function()
+isolatedTest("configured Do Nothing does not invoke Greed fallback", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_DO_NOTHING
 	AutoRollDB.fallbackRollMode = ROLL_GREED
 	local previousChoice = A_Admin.GetLastLootRollChoice()
 
-	local rollFrame = openRollBeforeAutoRollHandlesIt(8101)
+	local rollFrame = startVisibleRollThenAutoRoll(8101)
 
 	assertRollWasNotChosen(previousChoice, rollFrame)
-	cleanUpRoll(8101)
 end)
 
-test("unavailable Transmog falls back to Greed and dismisses the roll", function()
+isolatedTest("unavailable Transmog falls back to Greed and dismisses the roll", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_TRANSMOG
 	AutoRollDB.fallbackRollMode = ROLL_GREED
 
-	local rollFrame = openRollBeforeAutoRollHandlesIt(8102)
+	local rollFrame = startVisibleRollThenAutoRoll(8102)
 
-	assertEquals(ROLL_GREED, A_Admin.GetLastLootRollChoice())
-	assertEquals(0, #GetActiveLootRollIDs())
-	assertFalse(rollFrame:IsShown())
+	assertRollWasChosen(ROLL_GREED, rollFrame)
 end)
 
-test("available Need uses the configured default", function()
+isolatedTest("available Need uses the configured default", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_NEED
 	AutoRollDB.fallbackRollMode = ROLL_DO_NOTHING
 
-	local rollFrame = openRollBeforeAutoRollHandlesIt(8103, {
+	local rollFrame = startVisibleRollThenAutoRoll(8103, {
 		need = true,
 		greed = true,
 		disenchant = false,
 		transmog = false,
 	})
 
-	assertEquals(ROLL_NEED, A_Admin.GetLastLootRollChoice())
-	assertEquals(0, #GetActiveLootRollIDs())
-	assertFalse(rollFrame:IsShown())
+	assertRollWasChosen(ROLL_NEED, rollFrame)
 end)
 
-test("Pass uses the configured default", function()
+isolatedTest("available Disenchant uses the configured default", function()
+	useSupportedRaid()
+	AutoRollDB.defaultRollMode = ROLL_DISENCHANT
+	AutoRollDB.fallbackRollMode = ROLL_DO_NOTHING
+
+	local rollFrame = startVisibleRollThenAutoRoll(8111, {
+		need = false,
+		greed = true,
+		disenchant = true,
+		transmog = false,
+	})
+
+	assertRollWasChosen(ROLL_DISENCHANT, rollFrame)
+end)
+
+isolatedTest("Pass uses the configured default", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_PASS
 	AutoRollDB.fallbackRollMode = ROLL_DO_NOTHING
 
-	local rollFrame = openRollBeforeAutoRollHandlesIt(8104)
+	local rollFrame = startVisibleRollThenAutoRoll(8104)
 
-	assertEquals(ROLL_PASS, A_Admin.GetLastLootRollChoice())
-	assertEquals(0, #GetActiveLootRollIDs())
-	assertFalse(rollFrame:IsShown())
+	assertRollWasChosen(ROLL_PASS, rollFrame)
 end)
 
-test("unavailable Transmog falls back to Pass", function()
+isolatedTest("unavailable Transmog falls back to Pass", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_TRANSMOG
 	AutoRollDB.fallbackRollMode = ROLL_PASS
 
-	local rollFrame = openRollBeforeAutoRollHandlesIt(8105)
+	local rollFrame = startVisibleRollThenAutoRoll(8105)
 
-	assertEquals(ROLL_PASS, A_Admin.GetLastLootRollChoice())
-	assertEquals(0, #GetActiveLootRollIDs())
-	assertFalse(rollFrame:IsShown())
+	assertRollWasChosen(ROLL_PASS, rollFrame)
 end)
 
-test("unavailable Transmog with Do Nothing fallback leaves the roll active", function()
+isolatedTest("unavailable Transmog with Do Nothing fallback leaves the roll active", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_TRANSMOG
 	AutoRollDB.fallbackRollMode = ROLL_DO_NOTHING
 	local previousChoice = A_Admin.GetLastLootRollChoice()
 
-	local rollFrame = openRollBeforeAutoRollHandlesIt(8106)
+	local rollFrame = startVisibleRollThenAutoRoll(8106)
 
 	assertRollWasNotChosen(previousChoice, rollFrame)
-	cleanUpRoll(8106)
 end)
 
-test("disabled supported raid does not roll", function()
+isolatedTest("disabled supported raid does not roll", function()
 	useSupportedRaid()
 	AutoRollDB.raidSettings[2296] = false
 	AutoRollDB.defaultRollMode = ROLL_GREED
 	local previousChoice = A_Admin.GetLastLootRollChoice()
 
-	local rollFrame = openRollBeforeAutoRollHandlesIt(8107)
+	local rollFrame = startVisibleRollThenAutoRoll(8107)
 
 	assertRollWasNotChosen(previousChoice, rollFrame)
-	AutoRollDB.raidSettings[2296] = true
-	cleanUpRoll(8107)
 end)
 
-test("unsupported raid does not roll", function()
+isolatedTest("unsupported raid does not roll", function()
 	useSupportedRaid()
 	setTestInstance("Unsupported Raid", "raid", 9999)
 	AutoRollDB.defaultRollMode = ROLL_GREED
 	local previousChoice = A_Admin.GetLastLootRollChoice()
 
-	local rollFrame = openRollBeforeAutoRollHandlesIt(8108)
+	local rollFrame = startVisibleRollThenAutoRoll(8108)
 
 	assertRollWasNotChosen(previousChoice, rollFrame)
-	cleanUpRoll(8108)
 end)
 
-test("non-raid instance does not roll", function()
+isolatedTest("non-raid instance does not roll", function()
 	useSupportedRaid()
 	setTestInstance("Test Dungeon", "party", 9998)
 	AutoRollDB.defaultRollMode = ROLL_GREED
 	local previousChoice = A_Admin.GetLastLootRollChoice()
 
-	local rollFrame = openRollBeforeAutoRollHandlesIt(8109)
+	local rollFrame = startVisibleRollThenAutoRoll(8109)
 
 	assertRollWasNotChosen(previousChoice, rollFrame)
-	cleanUpRoll(8109)
 end)
 
-test("global toggle unregisters automatic rolling", function()
+isolatedTest("global toggle unregisters automatic rolling", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_GREED
 	SlashCmdList["AUTOROLL"]("toggle")
 	local previousChoice = A_Admin.GetLastLootRollChoice()
 
-	local rollFrame = startRollWithoutAutoRoll(8110)
+	local rollFrame = startVisibleRoll(8110)
 
 	assertRollWasNotChosen(previousChoice, rollFrame)
-	SlashCmdList["AUTOROLL"]("toggle")
-	cleanUpRoll(8110)
 end)
 
-test("loot history is hidden in an enabled supported raid", function()
+isolatedTest("loot history is hidden in an enabled supported raid", function()
 	useSupportedRaid()
 	AutoRollDB.autoCloseLootWindow = true
 	local frame = createLootHistoryFrame()
@@ -235,7 +306,7 @@ test("loot history is hidden in an enabled supported raid", function()
 	assertTrue(frame.wasHidden)
 end)
 
-test("loot history remains visible when suppression is disabled", function()
+isolatedTest("loot history remains visible when suppression is disabled", function()
 	useSupportedRaid()
 	AutoRollDB.autoCloseLootWindow = false
 	local frame = createLootHistoryFrame()
@@ -243,10 +314,9 @@ test("loot history remains visible when suppression is disabled", function()
 	AutoRollFrame:SuppressLootHistory(frame)
 
 	assertFalse(frame.wasHidden)
-	AutoRollDB.autoCloseLootWindow = true
 end)
 
-test("loot history remains visible outside supported raids", function()
+isolatedTest("loot history remains visible outside supported raids", function()
 	useSupportedRaid()
 	setTestInstance("Unsupported Raid", "raid", 9999)
 	AutoRollDB.autoCloseLootWindow = true
