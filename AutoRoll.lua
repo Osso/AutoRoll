@@ -22,17 +22,17 @@ ns.ModeLabels = {
 -- Raid instance IDs for raids with loot rolls (Shadowlands, Dragonflight, The War Within)
 ns.RaidInstances = {
 	-- Shadowlands
-	[13224] = "Castle Nathria",
-	[13561] = "Sanctum of Domination",
-	[13742] = "Sepulcher of the First Ones",
+	[2296] = "Castle Nathria",
+	[2450] = "Sanctum of Domination",
+	[2481] = "Sepulcher of the First Ones",
 	-- Dragonflight
-	[14030] = "Vault of the Incarnates",
-	[14663] = "Aberrus, the Shadowed Crucible",
-	[14643] = "Amirdrassil, the Dream's Hope",
+	[2522] = "Vault of the Incarnates",
+	[2569] = "Aberrus, the Shadowed Crucible",
+	[2549] = "Amirdrassil, the Dream's Hope",
 	-- The War Within
-	[14980] = "Nerub-ar Palace",
-	[15522] = "Liberation of Undermine",
-	[99999] = "Manaforge: Omega" -- Placeholder ID, update when available
+	[2657] = "Nerub-ar Palace",
+	[2769] = "Liberation of Undermine",
+	[2810] = "Manaforge: Omega"
 }
 
 -- Default database structure
@@ -44,20 +44,20 @@ ns.AutoRollDB_defaults = {
 	version = 1,
 	raidSettings = {
 		-- Shadowlands
-		[13224] = true, -- Castle Nathria
-		[13561] = true, -- Sanctum of Domination
-		[13742] = true, -- Sepulcher of the First Ones
+		[2296] = true, -- Castle Nathria
+		[2450] = true, -- Sanctum of Domination
+		[2481] = true, -- Sepulcher of the First Ones
 		-- Dragonflight
-		[14030] = true, -- Vault of the Incarnates
-		[14663] = true, -- Aberrus, the Shadowed Crucible
-		[14643] = true, -- Amirdrassil, the Dream's Hope
+		[2522] = true, -- Vault of the Incarnates
+		[2569] = true, -- Aberrus, the Shadowed Crucible
+		[2549] = true, -- Amirdrassil, the Dream's Hope
 		-- The War Within
-		[14980] = false, -- Nerub-ar Palace
-		[15522] = false, -- Liberation of Undermine
-		[99999] = false  -- Manaforge: Omega (placeholder)
+		[2657] = false, -- Nerub-ar Palace
+		[2769] = false, -- Liberation of Undermine
+		[2810] = false  -- Manaforge: Omega
 	},
+	autoCloseLootWindow = true,
 }
-ns.pendingItemInfo = nil
 
 -- Initialize saved variables
 if not AutoRollDB then
@@ -100,7 +100,7 @@ function ns.debugPrint(...)
 	if not AutoRollDB or not AutoRollDB.debugMode then
 		return
 	end
-	
+
 	ns.print("(Debug Message)")
 	for i, v in ipairs({...}) do
 		print(v)
@@ -112,12 +112,12 @@ end
 -- Check if we're currently in a supported raid
 local function isInSupportedRaid()
 	local instanceName, instanceType, _, _, _, _, _, instanceID = GetInstanceInfo()
-	
+
 	-- Check if we're in a raid instance
 	if instanceType ~= "raid" then
 		return false, nil
 	end
-	
+
 	-- Check if this raid is in our supported list
 	if ns.RaidInstances[instanceID] then
 		-- Check if this raid is enabled in settings
@@ -125,7 +125,7 @@ local function isInSupportedRaid()
 			return true, instanceID, instanceName
 		end
 	end
-	
+
 	return false, nil
 end
 ns.isInSupportedRaid = isInSupportedRaid
@@ -139,6 +139,16 @@ function ns.AddOnEnabled()
 		main:UnregisterEvent("START_LOOT_ROLL")
 	end
 	ns.print("|cffffff00Addon", (AutoRollDB and AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
+end
+
+-- Suppress the loot history popup in enabled raids (hide instantly on show)
+if GroupLootHistoryFrame then
+	GroupLootHistoryFrame:HookScript("OnShow", function(frame)
+		if AutoRollDB.autoCloseLootWindow and ns.isInSupportedRaid() then
+			ns.debugPrint("Suppressing loot history window")
+			frame:Hide()
+		end
+	end)
 end
 
 function main:ADDON_LOADED(name)
@@ -161,7 +171,7 @@ function main:START_LOOT_ROLL(rollID)
 		ns.debugPrint("Not in a supported raid or raid is disabled, skipping roll")
 		return
 	end
-	
+
 	local _, name, _, _, _, canNeed, canGreed, canDisenchant, _, _, _, _, canTransmog = GetLootRollItemInfo(rollID)
 
 	if not rollID or not name then
@@ -172,7 +182,7 @@ function main:START_LOOT_ROLL(rollID)
 		)
 		return
 	end
-	
+
 	ns.debugPrint("Rolling in raid:", raidName, "(ID:", raidID, ")")
 
 	local itemRollMode = AutoRollDB.defaultRollMode
@@ -197,7 +207,7 @@ function main:START_LOOT_ROLL(rollID)
 	elseif itemRollMode == ROLL_DO_NOTHING then
 		actualRollMode = ROLL_DO_NOTHING
 	end
-	
+
 	if actualRollMode == nil then
 	-- Desired roll mode not available, use fallback
 		local fallbackMode = AutoRollDB.fallbackRollMode
@@ -223,7 +233,6 @@ function main:START_LOOT_ROLL(rollID)
 		ns.print(name, "=", ns.ModeLabels[actualRollMode])
 	end
 end
-
 
 main:SetScript("OnEvent", function(self, event, ...) if main[event] then main[event](self, ...) end end)
 main:RegisterEvent("ADDON_LOADED")

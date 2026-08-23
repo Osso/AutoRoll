@@ -1,4 +1,4 @@
-## Interface: 110002
+## Interface: 120000
 ## Title: AutoRoll
 ## Notes: Roll automatical on Primal Spirit and other items
 ## Notes-deDE: Würfelt automatisch auf Urgeist und andere Gegenstände
