@@ -221,27 +221,15 @@ local function selectRollMode(desiredRollMode, fallbackRollMode, capabilities)
 	return nil
 end
 
-function main.START_LOOT_ROLL(_, rollID)
-	local inRaid, raidID, raidName = isInSupportedRaid()
-	if not inRaid then
-		ns.debugPrint("Not in a supported raid or raid is disabled, skipping roll")
-		return
-	end
+local function reportMissingLootItem(rollID, itemName)
+	ns.debugPrint(
+		"Event: START_LOOT_ROLL",
+		"rollID: " .. (rollID or "missing roll id"),
+		"itemName: " .. (itemName or "missing item name")
+	)
+end
 
-	local itemName, capabilities = getLootRollItemCapabilities(rollID)
-	if not rollID or not itemName then
-		ns.debugPrint(
-			"Event: START_LOOT_ROLL",
-			"rollID: " .. (rollID or "missing roll id"),
-			"itemName: " .. (itemName or "missing item name")
-		)
-		return
-	end
-
-	ns.debugPrint("Rolling in raid:", raidName, "(ID:", raidID, ")")
-
-	local desiredRollMode = AutoRollDB.defaultRollMode
-	local selectedRollMode = selectRollMode(desiredRollMode, AutoRollDB.fallbackRollMode, capabilities)
+local function applyAndReportSelectedRoll(rollID, itemName, desiredRollMode, selectedRollMode)
 	if selectedRollMode and selectedRollMode ~= ROLL_DO_NOTHING then
 		RollOnLoot(rollID, selectedRollMode)
 	end
@@ -257,6 +245,25 @@ function main.START_LOOT_ROLL(_, rollID)
 	if selectedRollMode then
 		ns.print(itemName, "=", ns.ModeLabels[selectedRollMode])
 	end
+end
+
+function main.START_LOOT_ROLL(_, rollID)
+	local inRaid, raidID, raidName = isInSupportedRaid()
+	if not inRaid then
+		ns.debugPrint("Not in a supported raid or raid is disabled, skipping roll")
+		return
+	end
+
+	local itemName, capabilities = getLootRollItemCapabilities(rollID)
+	if not rollID or not itemName then
+		reportMissingLootItem(rollID, itemName)
+		return
+	end
+
+	ns.debugPrint("Rolling in raid:", raidName, "(ID:", raidID, ")")
+	local desiredRollMode = AutoRollDB.defaultRollMode
+	local selectedRollMode = selectRollMode(desiredRollMode, AutoRollDB.fallbackRollMode, capabilities)
+	applyAndReportSelectedRoll(rollID, itemName, desiredRollMode, selectedRollMode)
 end
 
 local function dispatchEvent(self, event, ...)

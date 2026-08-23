@@ -118,7 +118,7 @@ local function startVisibleRoll(rollID)
 	return rollFrame
 end
 
-local function processAutoRoll(rollID, capabilities)
+local function fireAutoRollWithCapabilities(rollID, capabilities)
 	local originalGetLootRollItemInfo = GetLootRollItemInfo
 	if capabilities then
 		GetLootRollItemInfo = function(requestedRollID)
@@ -131,12 +131,16 @@ local function processAutoRoll(rollID, capabilities)
 	end
 
 	AutoRollFrame:RegisterEvent("START_LOOT_ROLL")
-	A_Admin.FireEvent("START_LOOT_ROLL", rollID, 30)
+	local eventSucceeded, eventError = pcall(A_Admin.FireEvent, "START_LOOT_ROLL", rollID, 30)
+	GetLootRollItemInfo = originalGetLootRollItemInfo
+	if not eventSucceeded then
+		error(eventError, 0)
+	end
 end
 
 local function startVisibleRollThenAutoRoll(rollID, capabilities)
 	local rollFrame = startVisibleRoll(rollID)
-	processAutoRoll(rollID, capabilities)
+	fireAutoRollWithCapabilities(rollID, capabilities)
 	return rollFrame
 end
 

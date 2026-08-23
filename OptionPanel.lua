@@ -49,9 +49,7 @@ local function registerRaidCheckbox(category, raid)
 	Settings.CreateCheckbox(category, setting, tooltip)
 end
 
-function ns.initSettingsPanel()
-	local category, layout = Settings.RegisterVerticalLayoutCategory(addon)
-
+local function registerCoreSettings(category)
 	registerTopLevelCheckbox(
 		category, "enabled", "Enable AutoRoll",
 		"Enables the auto roll functionality", onSettingEnabled
@@ -72,13 +70,20 @@ function ns.initSettingsPanel()
 		category, "autoCloseLootWindow", "Hide Loot History",
 		"Hide the loot history window while in an enabled raid"
 	)
+end
 
+local function registerRaidSettings(category, layout)
 	for _, raidGroup in ipairs(ns.RaidGroups) do
 		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(raidGroup.expansion .. " Raids"))
 		for _, raid in ipairs(raidGroup.raids) do
 			registerRaidCheckbox(category, raid)
 		end
 	end
+end
 
+function ns.initSettingsPanel()
+	local category, layout = Settings.RegisterVerticalLayoutCategory(addon)
+	registerCoreSettings(category)
+	registerRaidSettings(category, layout)
 	Settings.RegisterAddOnCategory(category)
 end
