@@ -1,13 +1,21 @@
 
 local addon, ns = ...
 
--- Roll constants (match WoW API RollOnLoot parameters)
-local ROLL_PASS = 0
-local ROLL_NEED = 1
-local ROLL_GREED = 2
-local ROLL_DISENCHANT = 3
-local ROLL_TRANSMOG = 4
-local ROLL_DO_NOTHING = 5  -- Internal only - don't roll at all
+ns.RollModes = {
+	PASS = 0,
+	NEED = 1,
+	GREED = 2,
+	DISENCHANT = 3,
+	TRANSMOG = 4,
+	DO_NOTHING = 5, -- Internal only - don't roll at all
+}
+
+local ROLL_PASS = ns.RollModes.PASS
+local ROLL_NEED = ns.RollModes.NEED
+local ROLL_GREED = ns.RollModes.GREED
+local ROLL_DISENCHANT = ns.RollModes.DISENCHANT
+local ROLL_TRANSMOG = ns.RollModes.TRANSMOG
+local ROLL_DO_NOTHING = ns.RollModes.DO_NOTHING
 
 ns.ModeLabels = {
 	[ROLL_GREED] = "Greed",
@@ -15,7 +23,20 @@ ns.ModeLabels = {
 	[ROLL_DISENCHANT] = "Disenchant",
 	[ROLL_TRANSMOG] = "Transmog",
 	[ROLL_PASS] = "Pass",
-	[ROLL_DO_NOTHING] = "Do nothing"
+	[ROLL_DO_NOTHING] = "Do nothing",
+}
+ns.DefaultRollModeOptions = {
+	ROLL_PASS,
+	ROLL_GREED,
+	ROLL_NEED,
+	ROLL_DISENCHANT,
+	ROLL_TRANSMOG,
+	ROLL_DO_NOTHING,
+}
+ns.FallbackRollModeOptions = {
+	ROLL_DO_NOTHING,
+	ROLL_PASS,
+	ROLL_GREED,
 }
 ns.RaidGroups = {
 	{
@@ -63,34 +84,31 @@ ns.AutoRollDB_defaults = {
 	autoCloseLootWindow = true,
 }
 
--- Initialize saved variables
-if not AutoRollDB then
-	AutoRollDB = {}
-end
-
--- Merge defaults with saved data
-for k, v in pairs(ns.AutoRollDB_defaults) do
-	if AutoRollDB[k] == nil then
-		if type(v) == "table" then
-			-- Deep copy for nested tables
-			AutoRollDB[k] = {}
-			for k2, v2 in pairs(v) do
-				AutoRollDB[k][k2] = v2
+local function mergeMissingDefaults(savedValues, defaultValues)
+	for settingName, defaultValue in pairs(defaultValues) do
+		if savedValues[settingName] == nil then
+			if type(defaultValue) == "table" then
+				savedValues[settingName] = {}
+			else
+				savedValues[settingName] = defaultValue
 			end
-		else
-			AutoRollDB[k] = v
 		end
-	else
-		-- For existing tables, merge missing keys
-		if type(v) == "table" and type(AutoRollDB[k]) == "table" then
-			for k2, v2 in pairs(v) do
-				if AutoRollDB[k][k2] == nil then
-					AutoRollDB[k][k2] = v2
+
+		local savedValue = savedValues[settingName]
+		if type(defaultValue) == "table" and type(savedValue) == "table" then
+			for nestedSettingName, nestedDefaultValue in pairs(defaultValue) do
+				if savedValue[nestedSettingName] == nil then
+					savedValue[nestedSettingName] = nestedDefaultValue
 				end
 			end
 		end
 	end
 end
+
+if not AutoRollDB then
+	AutoRollDB = {}
+end
+mergeMissingDefaults(AutoRollDB, ns.AutoRollDB_defaults)
 
 function ns.print(arg1, ...)
 	if arg1 == nil then
@@ -111,24 +129,19 @@ function ns.debugPrint(...)
 	end
 end
 
--- Check if we're currently in a supported raid
 local function isInSupportedRaid()
 	local instanceName, instanceType, _, _, _, _, _, instanceID = GetInstanceInfo()
-
-	-- Check if we're in a raid instance
 	if instanceType ~= "raid" then
 		return false, nil
 	end
-
-	-- Check if this raid is in our supported list
-	if ns.RaidInstances[instanceID] then
-		-- Check if this raid is enabled in settings
-		if AutoRollDB.raidSettings and AutoRollDB.raidSettings[instanceID] then
-			return true, instanceID, instanceName
-		end
+	if not ns.RaidInstances[instanceID] then
+		return false, nil
+	end
+	if not AutoRollDB.raidSettings or not AutoRollDB.raidSettings[instanceID] then
+		return false, nil
 	end
 
-	return false, nil
+	return true, instanceID, instanceName
 end
 ns.isInSupportedRaid = isInSupportedRaid
 
@@ -168,75 +181,90 @@ function main:ADDON_LOADED(name)
 	end
 end
 
+local function getLootRollItemCapabilities(rollID)
+	local _, itemName, _, _, _, canNeed, canGreed, canDisenchant, _, _, _, _, canTransmog =
+		GetLootRollItemInfo(rollID)
+
+	return itemName, {
+		canNeed = canNeed,
+		canGreed = canGreed,
+		canDisenchant = canDisenchant,
+		canTransmog = canTransmog,
+	}
+end
+
+local function isDesiredRollModeAvailable(rollMode, capabilities)
+	if rollMode == ROLL_NEED then
+		return capabilities.canNeed
+	elseif rollMode == ROLL_GREED then
+		return capabilities.canGreed
+	elseif rollMode == ROLL_DISENCHANT then
+		return capabilities.canDisenchant
+	elseif rollMode == ROLL_TRANSMOG then
+		return capabilities.canTransmog
+	end
+
+	return rollMode == ROLL_PASS or rollMode == ROLL_DO_NOTHING
+end
+
+local function selectRollMode(desiredRollMode, fallbackRollMode, capabilities)
+	if isDesiredRollModeAvailable(desiredRollMode, capabilities) then
+		return desiredRollMode
+	end
+	if fallbackRollMode == ROLL_GREED and capabilities.canGreed then
+		return ROLL_GREED
+	end
+	if fallbackRollMode == ROLL_PASS then
+		return ROLL_PASS
+	end
+
+	return nil
+end
+
 function main:START_LOOT_ROLL(rollID)
-	-- Check if we're in a supported raid first
 	local inRaid, raidID, raidName = isInSupportedRaid()
 	if not inRaid then
 		ns.debugPrint("Not in a supported raid or raid is disabled, skipping roll")
 		return
 	end
 
-	local _, name, _, _, _, canNeed, canGreed, canDisenchant, _, _, _, _, canTransmog = GetLootRollItemInfo(rollID)
-
-	if not rollID or not name then
+	local itemName, capabilities = getLootRollItemCapabilities(rollID)
+	if not rollID or not itemName then
 		ns.debugPrint(
 			"Event: START_LOOT_ROLL",
 			"rollID: " .. (rollID or "missing roll id"),
-			"itemName: " .. (name or "missing item name")
+			"itemName: " .. (itemName or "missing item name")
 		)
 		return
 	end
 
 	ns.debugPrint("Rolling in raid:", raidName, "(ID:", raidID, ")")
 
-	local itemRollMode = AutoRollDB.defaultRollMode
-	local actualRollMode = nil
-
-	-- Try to use the desired roll mode, fall back if not available
-	if itemRollMode == ROLL_NEED and canNeed then
-		RollOnLoot(rollID, ROLL_NEED)
-		actualRollMode = ROLL_NEED
-	elseif itemRollMode == ROLL_DISENCHANT and canDisenchant then
-		RollOnLoot(rollID, ROLL_DISENCHANT)
-		actualRollMode = ROLL_DISENCHANT
-	elseif itemRollMode == ROLL_GREED and canGreed then
-		RollOnLoot(rollID, ROLL_GREED)
-		actualRollMode = ROLL_GREED
-	elseif itemRollMode == ROLL_TRANSMOG and canTransmog then
-		RollOnLoot(rollID, ROLL_TRANSMOG)
-		actualRollMode = ROLL_TRANSMOG
-	elseif itemRollMode == ROLL_PASS then
-		RollOnLoot(rollID, ROLL_PASS)
-		actualRollMode = ROLL_PASS
-	elseif itemRollMode == ROLL_DO_NOTHING then
-		actualRollMode = ROLL_DO_NOTHING
-	end
-
-	if actualRollMode == nil then
-		-- Desired roll mode not available, use fallback
-		local fallbackMode = AutoRollDB.fallbackRollMode
-		if fallbackMode == ROLL_GREED and canGreed then
-			RollOnLoot(rollID, ROLL_GREED)
-			actualRollMode = ROLL_GREED
-		elseif fallbackMode == ROLL_PASS then
-			RollOnLoot(rollID, ROLL_PASS)
-			actualRollMode = ROLL_PASS
-		-- If fallback is ROLL_DO_NOTHING or also not available, don't roll
-		end
+	local desiredRollMode = AutoRollDB.defaultRollMode
+	local selectedRollMode = selectRollMode(desiredRollMode, AutoRollDB.fallbackRollMode, capabilities)
+	if selectedRollMode and selectedRollMode ~= ROLL_DO_NOTHING then
+		RollOnLoot(rollID, selectedRollMode)
 	end
 
 	ns.debugPrint(
 		"Event: START_LOOT_ROLL",
-		"itemName: " .. (name or "unknown"),
+		"itemName: " .. (itemName or "unknown"),
 		"rollID: " .. rollID,
-		"Desired: " .. (ns.ModeLabels[itemRollMode] or "nothing"),
-		"Actual: " .. (actualRollMode and ns.ModeLabels[actualRollMode] or "nothing")
+		"Desired: " .. (ns.ModeLabels[desiredRollMode] or "nothing"),
+		"Actual: " .. (selectedRollMode and ns.ModeLabels[selectedRollMode] or "nothing")
 	)
 
-	if actualRollMode then
-		ns.print(name, "=", ns.ModeLabels[actualRollMode])
+	if selectedRollMode then
+		ns.print(itemName, "=", ns.ModeLabels[selectedRollMode])
 	end
 end
 
-main:SetScript("OnEvent", function(self, event, ...) if main[event] then main[event](self, ...) end end)
+local function dispatchEvent(self, event, ...)
+	local handler = main[event]
+	if handler then
+		handler(self, ...)
+	end
+end
+
+main:SetScript("OnEvent", dispatchEvent)
 main:RegisterEvent("ADDON_LOADED")
