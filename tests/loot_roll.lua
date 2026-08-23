@@ -6,6 +6,7 @@ local ROLL_TRANSMOG = 4
 local ROLL_DO_NOTHING = 5
 
 local MAX_TEST_ROLL_FRAMES = 4
+local ADDON_PREFIX = "[|Cff3388ffAutoRoll|r]"
 
 if not AutoRollFrame then
 	local loaded, reason = C_AddOns.LoadAddOn("AutoRoll")
@@ -43,15 +44,40 @@ local function captureTestState()
 	return {
 		getInstanceInfo = GetInstanceInfo,
 		getLootRollItemInfo = GetLootRollItemInfo,
+		printFunction = print,
 		database = database,
 		raidSettings = AutoRollDB.raidSettings,
 		rollEventRegistered = AutoRollFrame:IsEventRegistered("START_LOOT_ROLL"),
+		lootHistoryShown = GroupLootHistoryFrame:IsShown(),
 	}
+end
+
+local function restoreLootHistoryVisibility(wasShown)
+	if not wasShown then
+		GroupLootHistoryFrame:Hide()
+		return
+	end
+
+	local autoCloseLootWindow = AutoRollDB.autoCloseLootWindow
+	AutoRollDB.autoCloseLootWindow = false
+	GroupLootHistoryFrame:Show()
+	AutoRollDB.autoCloseLootWindow = autoCloseLootWindow
+end
+
+local function showLootHistoryThroughHooks()
+	local shownDuringOnShow
+	GroupLootHistoryFrame:Hide()
+	GroupLootHistoryFrame:HookScript("OnShow", function(frame)
+		shownDuringOnShow = frame:IsShown()
+	end)
+	GroupLootHistoryFrame:Show()
+	return shownDuringOnShow
 end
 
 local function restoreTestState(state)
 	GetInstanceInfo = state.getInstanceInfo
 	GetLootRollItemInfo = state.getLootRollItemInfo
+	print = state.printFunction
 
 	replaceTable(AutoRollDB, state.database)
 	AutoRollDB.raidSettings = state.raidSettings
@@ -64,6 +90,7 @@ local function restoreTestState(state)
 	end
 
 	cleanUpActiveRolls()
+	restoreLootHistoryVisibility(state.lootHistoryShown)
 end
 
 local function isolatedTest(name, body)
@@ -165,6 +192,21 @@ local function createLootHistoryFrame()
 	}
 end
 
+local function capturePrintCalls(body)
+	local originalPrint = print
+	local calls = {}
+	print = function(...)
+		calls[#calls + 1] = {...}
+	end
+
+	local bodySucceeded, bodyError = pcall(body)
+	print = originalPrint
+	if not bodySucceeded then
+		error(bodyError, 0)
+	end
+	return calls
+end
+
 isolatedTest("raid defaults enable Shadowlands and Dragonflight only", function()
 	for _, instanceID in ipairs({2296, 2450, 2481, 2522, 2569, 2549}) do
 		assertTrue(AutoRollDB.raidSettings[instanceID])
@@ -195,6 +237,16 @@ isolatedTest("unavailable Transmog falls back to Greed and dismisses the roll", 
 	assertRollWasChosen(ROLL_GREED, rollFrame)
 end)
 
+isolatedTest("configured Greed uses the configured default", function()
+	useSupportedRaid()
+	AutoRollDB.defaultRollMode = ROLL_GREED
+	AutoRollDB.fallbackRollMode = ROLL_DO_NOTHING
+
+	local rollFrame = startVisibleRollThenAutoRoll(8112)
+
+	assertRollWasChosen(ROLL_GREED, rollFrame)
+end)
+
 isolatedTest("available Need uses the configured default", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_NEED
@@ -208,6 +260,21 @@ isolatedTest("available Need uses the configured default", function()
 	})
 
 	assertRollWasChosen(ROLL_NEED, rollFrame)
+end)
+
+isolatedTest("available Transmog uses the configured default", function()
+	useSupportedRaid()
+	AutoRollDB.defaultRollMode = ROLL_TRANSMOG
+	AutoRollDB.fallbackRollMode = ROLL_DO_NOTHING
+
+	local rollFrame = startVisibleRollThenAutoRoll(8113, {
+		need = false,
+		greed = true,
+		disenchant = false,
+		transmog = true,
+	})
+
+	assertRollWasChosen(ROLL_TRANSMOG, rollFrame)
 end)
 
 isolatedTest("available Disenchant uses the configured default", function()
@@ -289,15 +356,72 @@ isolatedTest("non-raid instance does not roll", function()
 	assertRollWasNotChosen(previousChoice, rollFrame)
 end)
 
-isolatedTest("global toggle unregisters automatic rolling", function()
+isolatedTest("global toggle unregisters and re-registers automatic rolling", function()
 	useSupportedRaid()
 	AutoRollDB.defaultRollMode = ROLL_GREED
+	assertTrue(AutoRollFrame:IsEventRegistered("START_LOOT_ROLL"))
+
 	SlashCmdList["AUTOROLL"]("toggle")
+	assertFalse(AutoRollFrame:IsEventRegistered("START_LOOT_ROLL"))
 	local previousChoice = A_Admin.GetLastLootRollChoice()
-
 	local rollFrame = startVisibleRoll(8110)
-
 	assertRollWasNotChosen(previousChoice, rollFrame)
+
+	SlashCmdList["AUTOROLL"]("toggle")
+	assertTrue(AutoRollFrame:IsEventRegistered("START_LOOT_ROLL"))
+end)
+
+isolatedTest("slash help prints exact command list", function()
+	local calls = capturePrintCalls(function()
+		SlashCmdList["AUTOROLL"]("")
+	end)
+
+	assertTableEquals({
+		{ADDON_PREFIX, "Chat command list for /autoroll"},
+		{"toggle - enable/disable AutoRoll in enabled raids", "Status: enabled"},
+		{"debug - enable/disable debug messages in chat window", "Status: disabled"},
+		{"raid - show current raid status and enabled raids"},
+	}, calls)
+end)
+
+isolatedTest("slash debug normalizes case and ignores trailing text", function()
+	local calls = capturePrintCalls(function()
+		SlashCmdList["AUTOROLL"]("DeBuG ignored text")
+	end)
+
+	assertTrue(AutoRollDB.debugMode)
+	assertTableEquals({{ADDON_PREFIX, "DebugMode enabled"}}, calls)
+end)
+
+isolatedTest("slash raid reports enabled, disabled, and non-raid status", function()
+	useSupportedRaid()
+	local enabledCalls = capturePrintCalls(function()
+		SlashCmdList["AUTOROLL"]("raid")
+	end)
+	assertTableEquals({{ADDON_PREFIX, "Currently in raid: Castle Nathria (AutoRoll enabled)"}}, enabledCalls)
+
+	AutoRollDB.raidSettings[2296] = false
+	local disabledCalls = capturePrintCalls(function()
+		SlashCmdList["AUTOROLL"]("raid")
+	end)
+	assertTableEquals({{
+		ADDON_PREFIX,
+		"Currently in raid: Castle Nathria (ID: 2296, supported but disabled)",
+	}}, disabledCalls)
+
+	setTestInstance("Test Dungeon", "party", 9998)
+	local nonRaidCalls = capturePrintCalls(function()
+		SlashCmdList["AUTOROLL"]("raid")
+	end)
+	assertTableEquals({{ADDON_PREFIX, "Not currently in a raid"}}, nonRaidCalls)
+end)
+
+isolatedTest("slash unknown command prints exact error", function()
+	local calls = capturePrintCalls(function()
+		SlashCmdList["AUTOROLL"]("mystery")
+	end)
+
+	assertTableEquals({{ADDON_PREFIX, "Unknown command: mystery"}}, calls)
 end)
 
 isolatedTest("loot history is hidden in an enabled supported raid", function()
@@ -329,4 +453,18 @@ isolatedTest("loot history remains visible outside supported raids", function()
 	AutoRollFrame:SuppressLootHistory(frame)
 
 	assertFalse(frame.wasHidden)
+end)
+
+isolatedTest("loot history OnShow hook hides the real frame in an enabled raid", function()
+	useSupportedRaid()
+	AutoRollDB.autoCloseLootWindow = true
+
+	assertFalse(showLootHistoryThroughHooks())
+end)
+
+isolatedTest("loot history OnShow hook leaves the real frame visible when disabled", function()
+	useSupportedRaid()
+	AutoRollDB.autoCloseLootWindow = false
+
+	assertTrue(showLootHistoryThroughHooks())
 end)

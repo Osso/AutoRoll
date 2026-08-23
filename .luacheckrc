@@ -21,7 +21,7 @@ globals = {
 files["tests"] = {
 	globals = {
 		"C_AddOns", "A_Admin", "test", "AutoRollFrame", "_G",
-		"assertEquals", "assertTrue", "assertFalse", "assertNotNil", "assert",
+		"assertEquals", "assertTrue", "assertFalse", "assertNotNil", "assertTableEquals", "assert",
 		"pcall", "error",
 		"GetActiveLootRollIDs", "GroupLootContainer_AddRoll",
 	},

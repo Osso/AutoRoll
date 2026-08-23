@@ -5,8 +5,8 @@ project_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 cd "$project_dir"
 
 sh -n run-tests.sh
-luacheck AutoRoll.lua OptionPanel.lua SlashCommand.lua tests/loot_roll.lua
-luac -p AutoRoll.lua OptionPanel.lua SlashCommand.lua tests/loot_roll.lua
+luacheck AutoRoll.lua OptionPanel.lua SlashCommand.lua tests/*.lua
+luac -p AutoRoll.lua OptionPanel.lua SlashCommand.lua tests/*.lua
 
 wow_sim_bin=${WOW_SIM_BIN:-"$project_dir/../wow-ui-sim/target/debug/wow-sim"}
 case "$wow_sim_bin" in
