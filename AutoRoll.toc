@@ -4,12 +4,10 @@
 ## Notes-deDE: Würfelt automatisch auf Urgeist und andere Gegenstände
 ## Author: Hizuro
 ## Credit: Azial for initial idea and first piece of code in german WoW forum.
-## Version: 1.02-Modernized
+## Credit: Modernized fork maintained by Osso (github.com/Osso/AutoRoll)
+## Version: 1.0.0
+## X-License: GPLv3
 ## SavedVariables: AutoRollDB
-## X-Curse-Packaged-Version: 1.01-Release
-## X-Curse-Project-Name: AutoRoll
-## X-Curse-Project-ID: autoroll
-## X-Curse-Repository-ID: wow/autoroll/mainline
 
 AutoRoll.lua
 OptionPanel.lua
