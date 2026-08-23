@@ -141,13 +141,16 @@ function ns.AddOnEnabled()
 	ns.print("|cffffff00Addon", (AutoRollDB and AutoRollDB.enabled and "enabled" or "disabled") .. "...|r")
 end
 
--- Suppress the loot history popup in enabled raids (hide instantly on show)
+function main:SuppressLootHistory(frame)
+	if AutoRollDB.autoCloseLootWindow and ns.isInSupportedRaid() then
+		ns.debugPrint("Suppressing loot history window")
+		frame:Hide()
+	end
+end
+
 if GroupLootHistoryFrame then
 	GroupLootHistoryFrame:HookScript("OnShow", function(frame)
-		if AutoRollDB.autoCloseLootWindow and ns.isInSupportedRaid() then
-			ns.debugPrint("Suppressing loot history window")
-			frame:Hide()
-		end
+		main:SuppressLootHistory(frame)
 	end)
 end
 
