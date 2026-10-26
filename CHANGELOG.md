@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added opt-in Midnight per-raid settings for The Voidspire (2912), The Dreamrift (2939), March on Quel'Danas (2913), Sporefall (1592), The Tidebound Grotto (2987), and The Venomous Abyss (3004), all disabled by default. Existing The War Within entries and defaults are unchanged.
+- Raid data source: [BigWigs Loader.lua](https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua). No live game validation was performed.
+
 ## 1.1
 
 - Refactored roll selection, settings registration, slash commands, and test isolation without changing addon behavior

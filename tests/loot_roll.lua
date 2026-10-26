@@ -207,10 +207,59 @@ isolatedTest("raid defaults enable Shadowlands and Dragonflight only", function(
 	for _, instanceID in ipairs({2296, 2450, 2481, 2522, 2569, 2549}) do
 		assertTrue(AutoRollDB.raidSettings[instanceID])
 	end
-	for _, instanceID in ipairs({2657, 2769, 2810}) do
-		assertFalse(AutoRollDB.raidSettings[instanceID])
-	end
 end)
+
+local optInRaids = {
+	{2657, "Nerub-ar Palace"},
+	{2769, "Liberation of Undermine"},
+	{2810, "Manaforge: Omega"},
+	{2912, "The Voidspire"},
+	{2939, "The Dreamrift"},
+	{2913, "March on Quel'Danas"},
+	{1592, "Sporefall"},
+	{2987, "The Tidebound Grotto"},
+	{3004, "The Venomous Abyss"},
+}
+
+for index, raid in ipairs(optInRaids) do
+	local instanceID, raidName = raid[1], raid[2]
+
+	isolatedTest(raidName .. " defaults to false and leaves the roll active", function()
+		assertEquals(false, AutoRollDB.raidSettings[instanceID])
+		setTestInstance(raidName, "raid", instanceID)
+		AutoRollDB.enabled = true
+		AutoRollDB.defaultRollMode = ROLL_GREED
+		local previousChoice = A_Admin.GetLastLootRollChoice()
+
+		local rollFrame = startVisibleRollThenAutoRoll(8200 + index)
+
+		assertRollWasNotChosen(previousChoice, rollFrame)
+	end)
+
+	isolatedTest("enabled " .. raidName .. " chooses Greed and dismisses the roll", function()
+		setTestInstance(raidName, "raid", instanceID)
+		AutoRollDB.enabled = true
+		AutoRollDB.raidSettings[instanceID] = true
+		AutoRollDB.defaultRollMode = ROLL_GREED
+		AutoRollDB.fallbackRollMode = ROLL_DO_NOTHING
+
+		local rollFrame = startVisibleRollThenAutoRoll(8300 + index)
+
+		assertRollWasChosen(ROLL_GREED, rollFrame)
+	end)
+
+	isolatedTest("disabled " .. raidName .. " leaves the roll active", function()
+		setTestInstance(raidName, "raid", instanceID)
+		AutoRollDB.enabled = true
+		AutoRollDB.raidSettings[instanceID] = false
+		AutoRollDB.defaultRollMode = ROLL_GREED
+		local previousChoice = A_Admin.GetLastLootRollChoice()
+
+		local rollFrame = startVisibleRollThenAutoRoll(8400 + index)
+
+		assertRollWasNotChosen(previousChoice, rollFrame)
+	end)
+end
 
 isolatedTest("configured Do Nothing does not invoke Greed fallback", function()
 	useSupportedRaid()

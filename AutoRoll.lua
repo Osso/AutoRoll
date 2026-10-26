@@ -63,6 +63,17 @@ ns.RaidGroups = {
 			{instanceID = 2810, name = "Manaforge: Omega", enabledByDefault = false},
 		},
 	},
+	{
+		expansion = "Midnight",
+		raids = {
+			{instanceID = 2912, name = "The Voidspire", enabledByDefault = false},
+			{instanceID = 2939, name = "The Dreamrift", enabledByDefault = false},
+			{instanceID = 2913, name = "March on Quel'Danas", enabledByDefault = false},
+			{instanceID = 1592, name = "Sporefall", enabledByDefault = false},
+			{instanceID = 2987, name = "The Tidebound Grotto", enabledByDefault = false},
+			{instanceID = 3004, name = "The Venomous Abyss", enabledByDefault = false},
+		},
+	},
 }
 
 ns.RaidInstances = {}

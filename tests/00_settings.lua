@@ -189,20 +189,29 @@ local raidSettings = {
 	{2657, "Nerub-ar Palace", false},
 	{2769, "Liberation of Undermine", false},
 	{2810, "Manaforge: Omega", false},
+	{2912, "The Voidspire", false},
+	{2939, "The Dreamrift", false},
+	{2913, "March on Quel'Danas", false},
+	{1592, "Sporefall", false},
+	{2987, "The Tidebound Grotto", false},
+	{3004, "The Venomous Abyss", false},
 }
 
 test("registers exact core settings and controls", function()
 	for _, expected in ipairs(coreSettings) do
 		assertSetting(expected)
 	end
-	assertEquals(14, #captured.settings)
-	assertEquals(12, #captured.checkboxes)
+	assertEquals(20, #captured.settings)
+	assertEquals(18, #captured.checkboxes)
 	assertEquals(2, #captured.dropdowns)
 end)
 
 test("registers exact raid settings in expansion order", function()
-	for _, raid in ipairs(raidSettings) do
+	for index, raid in ipairs(raidSettings) do
 		local instanceID, raidName, enabledByDefault = raid[1], raid[2], raid[3]
+		local registered = captured.settings[#coreSettings + index]
+		assertNotNil(registered)
+		assertEquals("AutoRoll_raid_" .. instanceID, registered.settingID)
 		assertSetting({
 			settingID = "AutoRoll_raid_" .. instanceID,
 			variableKey = instanceID,
@@ -214,7 +223,9 @@ test("registers exact raid settings in expansion order", function()
 			controlType = "checkbox",
 		})
 	end
-	assertTableEquals({"Shadowlands Raids", "Dragonflight Raids", "The War Within Raids"}, captured.sectionLabels)
+	assertTableEquals({
+		"Shadowlands Raids", "Dragonflight Raids", "The War Within Raids", "Midnight Raids",
+	}, captured.sectionLabels)
 end)
 
 test("registers exact dropdown option order and final category", function()
