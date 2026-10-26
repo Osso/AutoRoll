@@ -5,7 +5,7 @@
 ## Author: Hizuro
 ## Credit: Azial for initial idea and first piece of code in german WoW forum.
 ## Credit: Modernized fork maintained by Osso (github.com/Osso/AutoRoll)
-## Version: 1.1
+## Version: 1.2
 ## X-License: GPLv3
 ## SavedVariables: AutoRollDB
 
