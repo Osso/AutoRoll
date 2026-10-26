@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added GitHub Actions checks for Lua lint, syntax, and simulator tests.
+
 ## 1.2
 
 - Added opt-in Midnight per-raid settings for The Voidspire (2912), The Dreamrift (2939), March on Quel'Danas (2913), Sporefall (1592), The Tidebound Grotto (2987), and The Venomous Abyss (3004), all disabled by default. Existing The War Within entries and defaults are unchanged.

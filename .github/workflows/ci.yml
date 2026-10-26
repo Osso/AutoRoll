@@ -1,0 +1,25 @@
+name: CI
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1 lua-check
+      - name: Run host prechecks
+        run: |
+          sh -n run-tests.sh
+          luacheck AutoRoll.lua OptionPanel.lua SlashCommand.lua tests/*.lua
+          luac5.1 -p AutoRoll.lua OptionPanel.lua SlashCommand.lua tests/*.lua
+      - uses: osso/wow-ui-sim@v0.1.36
+        with:
+          addon: AutoRoll
+          image-tag: 0.1.36
